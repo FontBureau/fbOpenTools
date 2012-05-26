@@ -5,6 +5,7 @@ from vanilla import *
 from AppKit import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from fnmatch import fnmatch
+import string
 
 #############
 # RESOURCES #
@@ -65,17 +66,27 @@ UNICODE_CATEGORIES_COMBINED = {
     'Separator': ['Zs', 'Zl', 'Zp'],
     'Other': ['Cc', 'Cf', 'Cs', 'Co', 'Cn'],
 }
-def dec2hex(cls, n, uni = 1):
+def dec2hex(n, uni = 1):
     hex = "%X" % n
     if uni == 1:
     	while len(hex) <= 3:
     		hex = '0' + str(hex)
     return hex
-def readUnicode(cls, unicodeInteger):
-    if type(unicodeInteger) is int:
+def readUnicode(unicodeInteger):
+    if isinstance(unicodeInteger, int):
         return dec2hex(unicodeInteger)
     else:
         return str(unicodeInteger)
+def hex2dec(s):
+    try:
+        return int(s, 16)
+    except:
+        pass
+def writeUnicode(unicodeString):
+    if type(unicodeString) is str:
+        return hex2dec(unicodeString)
+    else:
+        return int(unicodeString)
 def reverseDict(d):
 	"""
 	Reverse a dictionary. This only works right when the dictionary has unique keys and unique values.
@@ -298,8 +309,10 @@ class SelectGlyphSearch(BaseWindowController):
 
     def doSearchInUnicode(self, searchTerm, searchIn, unicodeData=None):
         searchResults = []
+
         if unicodeData is None:
             unicodeData = self.getUnicodeData()
+
         for gname in searchIn:
             dec = unicodeData.unicodeForGlyphName(gname)
             hex = readUnicode(dec)
@@ -307,6 +320,37 @@ class SelectGlyphSearch(BaseWindowController):
                 searchResults.append(gname)
         searchResults.sort()
         return searchResults
+
+        """
+        # at some point in the future, implement unicode ranges...
+        searchRanges = searchTerm.split(',')
+        for x, searchRange in enumerate(searchRanges):
+            searchRange = string.strip(searchRange)
+            searchRanges[x] = searchRange.split('-')
+        
+        # [[min, max], [min, max]]
+        
+        for gname in searchIn:
+            dec = unicodeData.unicodeForGlyphName(gname)
+            if dec:
+                hex = dec2hex(dec)
+                for searchRange in searchRanges:
+                    if len(searchRange) == 1:
+                        if fnmatch(hex, searchTerm) and not gname in searchResults:
+                            searchResults.append(gname)
+                    elif len(searchRange) == 2 and len(searchRange[0]) == 4 and len(searchRange[1]) == 4:
+                        min, max = searchRange
+                        mindec, maxdec = hex2dec(min), hex2dec(max)
+                        if mindec and maxdec:
+                            print min, max, mindec, maxdec, dec, min < dec, max
+                            if mindec < dec < maxdec:
+                                searchResults.append(gname)
+        """
+        
+        searchResults.sort()
+        return searchResults
+
+        
         
     def doSearchInUnicodeCategory(self, searchTerm, searchIn, unicodeData=None):
         searchResults = []
