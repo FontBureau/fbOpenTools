@@ -1,0 +1,1 @@
+https://github.com/FontBureau/fbOpenTools/blob/master/GlyphSelect/GlyphSelect_preview.png
