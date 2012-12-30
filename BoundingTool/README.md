@@ -1,8 +1,8 @@
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/BoundingTool/BoundingTool_preview.png" />
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/BoundingTool/BoundingTool_preview.png" width="400" />
 
 
 
-<p>A subclass of the Robofont Editing Tool, Bounding Tool helps you visualize. It is especially helpful in half-way marks. </p>
+<p>A subclass of the Robofont Editing Tool, Bounding Tool helps you visualize the bounding box of your current glyph. It is especially helpful if you are trying to center something, or divide something evenly into halves, thirds, or quarters.</p>
 
 <p>The dialog box gives you some options:</p>
 
