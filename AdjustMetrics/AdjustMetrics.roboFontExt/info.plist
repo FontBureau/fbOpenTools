@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>addToMenu</key>
+	<array>
+		<dict>
+			<key>path</key>
+			<string>adjustMetrics.py</string>
+			<key>preferredName</key>
+			<string>adjustMetrics</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+	</array>
+	<key>developer</key>
+	<string>David Jonathan Ross</string>
+	<key>developerURL</key>
+	<string>http://www.fontbureau.com</string>
+	<key>html</key>
+	<true/>
+	<key>launchAtStartUp</key>
+	<integer>0</integer>
+	<key>mainScript</key>
+	<string></string>
+	<key>name</key>
+	<string>AdjustMetrics</string>
+	<key>timeStamp</key>
+	<real>1340333208.607609</real>
+	<key>version</key>
+	<string>1.0</string>
+</dict>
+</plist>
