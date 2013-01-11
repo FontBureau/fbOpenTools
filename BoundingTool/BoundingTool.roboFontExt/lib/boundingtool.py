@@ -2,8 +2,12 @@ from mojo.events import BaseEventTool, installTool, EditingTool
 from AppKit import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.drawingTools import *
+from mojo.extensions import ExtensionBundle
 from vanilla import *
 
+bundle = ExtensionBundle("BoundingTool")
+toolbarIcon = bundle.getResourceImage("boundingtool")
+toolbarIcon.setSize_((16, 16))
 
 class BoundingTool(EditingTool, BaseWindowController):
     u"""
@@ -18,9 +22,7 @@ class BoundingTool(EditingTool, BaseWindowController):
         return "bounding edit"
         
     def getToolbarIcon(self):
-       image = NSImage.alloc().initWithContentsOfFile_('boundingtool.png')
-       image.setSize_((16, 16))
-       return image
+        return toolbarIcon
 
     def getSelectedBox(self):
         g = self.getGlyph()
