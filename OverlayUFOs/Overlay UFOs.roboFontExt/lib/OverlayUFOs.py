@@ -69,9 +69,13 @@ class MojoDrawingToolsPen(object):
     def draw(self):
         drawPath()
     def addComponent(self, baseName, transformation):
-        glyph = self.f[baseName]
-        tPen = TransformPen(self, transformation)
-        glyph.draw(tPen)
+        try:
+            glyph = self.f[baseName]
+            tPen = TransformPen(self, transformation)
+            glyph.draw(tPen)
+        except:
+            pass
+
 
 class ViewSourceFonts(object):
     def __init__(self):
