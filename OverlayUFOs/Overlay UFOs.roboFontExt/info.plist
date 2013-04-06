@@ -29,5 +29,9 @@
 	<real>1338011491.713975</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>OverlayUFOs/Overlay UFOs.roboFontExt</string>
 </dict>
 </plist>

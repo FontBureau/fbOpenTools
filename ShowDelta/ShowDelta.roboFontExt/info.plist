@@ -22,5 +22,9 @@
 	<real>1361991980.1045799</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>ShowDelta/ShowDelta.roboFontExt</string>
 </dict>
 </plist>
