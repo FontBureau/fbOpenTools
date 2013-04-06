@@ -29,5 +29,9 @@
 	<real>1340333208.607609</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>AdjustMetrics/AdjustMetrics.roboFontExt</string>
 </dict>
 </plist>

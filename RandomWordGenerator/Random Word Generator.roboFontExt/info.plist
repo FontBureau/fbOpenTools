@@ -29,5 +29,9 @@
 	<real>1364944073.0646529</real>
 	<key>version</key>
 	<string>1.01</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>RandomWordGenerator/Random Word Generator.roboFontExt</string>
 </dict>
 </plist>
