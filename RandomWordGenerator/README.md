@@ -1,4 +1,4 @@
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/randomWordGenerator/randomWordGenerator_preview.png" />
+<img src="https://raw.github.com/FontBureau/fbOpenTools/master/RandomWordGenerator/randomWordGenerator_preview.png" />
 
 <p>This extension sticks a string of random words into your current space center. The computer sometimes has a sick mind, so don’t blame me for offensive words! If a space center is not open, it will simply print the random words into the output window.</p>
 

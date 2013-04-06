@@ -1,4 +1,4 @@
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/ShowDelta/ShowDelta_preview.png" />
+<img src="https://raw.github.com/FontBureau/fbOpenTools/master/showDelta/showDelta_preview.png" />
 
 <p>In the current glyph window, this extension will provide a readout of the how far your mouse has been dragged. Installing it will activate it; it doesn’t appear in menus.</p>
 
