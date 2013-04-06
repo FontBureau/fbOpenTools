@@ -110,7 +110,7 @@ class RandomWordsWindow:
                         newWord.append(char)
                 words[i] = ''.join(newWord)
         try:
-            c.set(' '.join(words))
+            c.setRaw(' '.join(words))
         except:
             print ' '.join(words)
 
