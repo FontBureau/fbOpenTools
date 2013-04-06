@@ -29,5 +29,9 @@
 	<real>1338009990.8311591</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>GlyphSelect/GlyphSelect.roboFontExt</string>
 </dict>
 </plist>
