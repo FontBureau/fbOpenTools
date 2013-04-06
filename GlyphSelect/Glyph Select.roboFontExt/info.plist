@@ -32,6 +32,6 @@
 	<key>repository</key>
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
-	<string>GlyphSelect/GlyphSelect.roboFontExt</string>
+	<string>GlyphSelect/Glyph Select.roboFontExt</string>
 </dict>
 </plist>
