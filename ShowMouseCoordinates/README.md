@@ -1,4 +1,4 @@
-<img src="https://raw.github.com/FontBureau/fbOpenTools/master/ShowMouseCoordintes/showMouseCoordinates_preview.png" />
+<img src="https://raw.github.com/FontBureau/fbOpenTools/master/ShowMouseCoordinates/showMouseCoordinates_preview.png" />
 
 <p>In the current glyph window, this extension will provide a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance. Installing this extension will activate it; it doesn’t appear in menus.</p>
 
