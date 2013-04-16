@@ -3,9 +3,11 @@
 SHOW MOUSE COORDINATES
 2013-04-16 DJR
 
-In the current glyph window, this extension will provide a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance. Installing this extension will activate it; it doesn’t appear in menus.</p>
+In the current glyph window, this extension will provide a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance. The readout is positioned at the bottom left corner of the glyph window (thanks to Frederik Berlaen for his help figuring this out!).
 
-Theoretically it should work alongside any tool: edit, pen, knife, measure, etc. For some reason I have been getting weird results with the Shape Tool though.</p>
+Installing this extension will activate it; it doesn’t appear in menus.
+
+Theoretically it should work alongside any tool: edit, pen, knife, measure, etc. For some reason I have been getting weird results with the Shape Tool though.
 
 Released under MIT license.
 
