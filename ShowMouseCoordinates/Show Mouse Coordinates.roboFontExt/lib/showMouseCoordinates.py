@@ -46,7 +46,7 @@ class ShowMouseCoordinatesTextBox(TextBox):
         deltaPoint = info["delta"]
         angle = math.degrees(math.atan2(deltaPoint.y, deltaPoint.x))
         distance = math.hypot(deltaPoint.x, deltaPoint.y)
-        text = u"⌖ %.0f %.0f  Δ %.0f %.0f  ∠ %.2f°  ↔ %.0f" % (point.x, point.y, deltaPoint.x, deltaPoint.y, angle, distance)
+        text = u"⌖ %.0f %.0f   Δ %.0f %.0f   ∠ %.2f°   ↔ %.0f" % (point.x, point.y, deltaPoint.x, deltaPoint.y, angle, distance)
         self.set(text)
         
     def mouseUp(self, info):
@@ -69,14 +69,13 @@ class ShowMouseCoordinates(BaseWindowController):
 
     def glyphWindowDidOpen(self, info):
         window = info["window"]
-        vanillaView = ShowMouseCoordinatesTextBox((20, 10, -20, 22), "", alignment="left", sizeStyle="mini")
-        #vanillaView = ShowMouseCoordinatesTextBox((-300, -40, -20, 22), "", alignment="right", sizeStyle="small")
-        superview = window.w.editScrollView.getNSScrollView()
+        vanillaView = ShowMouseCoordinatesTextBox((20, -30, -20, 22), "", alignment="left", sizeStyle="mini")
+        superview = window.editGlyphView.enclosingScrollView().superview()
         view = vanillaView.getNSTextField()
         frame = superview.frame()
         vanillaView._setFrame(frame)
         superview.addSubview_(view)
-        
+                
     def windowCloseCallback(self, sender):
         super(ShowMouseCoordinatesTextBox, self).windowCloseCallback(sender)
         removeObserver(self, "glyphWindowDidOpen")
