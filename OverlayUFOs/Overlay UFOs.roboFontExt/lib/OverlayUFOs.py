@@ -37,6 +37,7 @@ Improvement?: Set different colors, fill settings for each font?
 from mojo.drawingTools import *
 from mojo.events import addObserver, removeObserver
 from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.basePen import BasePen
 from vanilla import *
 from AppKit import *
 from mojo.UI import UpdateCurrentGlyphView
@@ -46,8 +47,9 @@ import os
 
 from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
 
-class MojoDrawingToolsPen(object):
+class MojoDrawingToolsPen(BasePen):
     def __init__(self, g, f):
+        BasePen.__init__(self, None)
         self.g = g
         self.f = f
         newPath()
