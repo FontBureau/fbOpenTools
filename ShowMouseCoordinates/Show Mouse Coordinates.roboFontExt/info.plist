@@ -20,5 +20,9 @@
 	<real>1366118749.7201691</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>ShowMouseCoordinates/Show Mouse Coordinates.roboFontExt</string>
 </dict>
 </plist>
