@@ -255,6 +255,8 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
     
     def addPathCallback(self, sender):
         f = OpenFont(None, showUI=False)
+        if f is None: # Cancel button was hit, or Escape key was pressed
+        	return
         sources = self.getSources()
         if type(f) is not list:
             f = [f]
