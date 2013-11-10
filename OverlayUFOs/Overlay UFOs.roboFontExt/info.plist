@@ -8,15 +8,15 @@
 			<key>path</key>
 			<string>OverlayUFOs.py</string>
 			<key>preferredName</key>
-			<string>OverlayUFOs</string>
+			<string>Overlay UFOs</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>David Jonathan Ross</string>
+	<string>David Jonathan Ross, Jens Kutilek</string>
 	<key>developerURL</key>
-	<string>http://www.fontbureau.com</string>
+	<string>https://github.com/jenskutilek/fbOpenTools</string>
 	<key>html</key>
 	<true/>
 	<key>launchAtStartUp</key>
@@ -26,11 +26,11 @@
 	<key>name</key>
 	<string>Overlay UFOs</string>
 	<key>timeStamp</key>
-	<real>1338011491.713975</real>
+	<real>1384117922.0</real>
 	<key>version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
+	<string>jenskutilek/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>OverlayUFOs/Overlay UFOs.roboFontExt</string>
 </dict>
