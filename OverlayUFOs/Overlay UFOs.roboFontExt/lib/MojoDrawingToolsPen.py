@@ -29,6 +29,9 @@ class MojoDrawingToolsPen(BasePen):
         drawPath()
     
     def addComponent(self, baseName, transformation):
-        glyph = self.glyphSet[baseName]
-        tPen = TransformPen(self, transformation)
-        glyph.draw(tPen)
+        try:
+            glyph = self.glyphSet[baseName]
+            tPen = TransformPen(self, transformation)
+            glyph.draw(tPen)
+        except:
+            pass
