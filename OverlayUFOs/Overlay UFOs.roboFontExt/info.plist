@@ -14,9 +14,9 @@
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>David Jonathan Ross, Jens Kutilek</string>
+	<string>David Jonathan Ross</string>
 	<key>developerURL</key>
-	<string>https://github.com/jenskutilek/fbOpenTools</string>
+	<string>http://www.fontbureau.com</string>
 	<key>html</key>
 	<true/>
 	<key>launchAtStartUp</key>
@@ -26,11 +26,11 @@
 	<key>name</key>
 	<string>Overlay UFOs</string>
 	<key>timeStamp</key>
-	<real>1384117922.0</real>
+	<real>1384253504.0</real>
 	<key>version</key>
 	<string>1.1</string>
 	<key>repository</key>
-	<string>jenskutilek/fbOpenTools</string>
+	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>OverlayUFOs/Overlay UFOs.roboFontExt</string>
 </dict>

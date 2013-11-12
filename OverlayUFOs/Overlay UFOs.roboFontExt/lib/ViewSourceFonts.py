@@ -38,7 +38,7 @@ class ViewSourceFonts(object):
                         sourceGlyph = source[name]
                         sourceFont = sourceGlyph.getParent()
                         if self.alignment == 1:
-                            translate(round((glyph.width/2.0 - sourceGlyph.width/2.0)/2.0), 0)
+                            translate(round((glyph.width - sourceGlyph.width)/2.0), 0)
                         elif self.alignment == 2:
                             translate(round(glyph.width-sourceGlyph.width), 0)
                         mPen = MojoDrawingToolsPen(sourceGlyph, sourceFont)
