@@ -8,7 +8,7 @@
 			<key>path</key>
 			<string>OverlayUFOs.py</string>
 			<key>preferredName</key>
-			<string>OverlayUFOs</string>
+			<string>Overlay UFOs</string>
 			<key>shortKey</key>
 			<string></string>
 		</dict>
@@ -26,9 +26,9 @@
 	<key>name</key>
 	<string>Overlay UFOs</string>
 	<key>timeStamp</key>
-	<real>1338011491.713975</real>
+	<real>1384253504.0</real>
 	<key>version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>repository</key>
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>

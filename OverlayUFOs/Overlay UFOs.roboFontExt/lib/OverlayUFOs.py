@@ -34,122 +34,15 @@ Improvement?: Set different colors, fill settings for each font?
 
 """
 
-from mojo.drawingTools import *
-from mojo.events import addObserver, removeObserver
-from fontTools.pens.transformPen import TransformPen
-from fontTools.pens.basePen import BasePen
-from vanilla import *
-from AppKit import *
+from mojo.drawingTools import stroke, fill, strokeWidth
+from vanilla import Button, CheckBox, ColorWell, FloatingWindow, List, RadioGroup, TextBox
+from AppKit import NSFilenamesPboardType, NSDragOperationCopy, NSColor
 from mojo.UI import UpdateCurrentGlyphView
 from defconAppKit.windows.baseWindow import BaseWindowController
-import os
-
-
+from os.path import splitext
 from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
 
-class MojoDrawingToolsPen(BasePen):
-    def __init__(self, g, f):
-        BasePen.__init__(self, None)
-        self.g = g
-        self.f = f
-        newPath()
-    def moveTo(self, pt):
-        x, y = pt
-        moveTo((x, y))
-    def lineTo(self, pt):
-        x, y = pt
-        lineTo((x, y))
-    def curveTo(self, pt1, pt2, pt3):
-        h1x, h1y = pt1
-        h2x, h2y = pt2
-        x, y = pt3
-        curveTo((h1x, h1y), (h2x, h2y), (x, y))
-    def closePath(self):
-        closePath()
-    def endPath(self):
-        closePath()
-    def draw(self):
-        drawPath()
-    def addComponent(self, baseName, transformation):
-        try:
-            glyph = self.f[baseName]
-            tPen = TransformPen(self, transformation)
-            glyph.draw(tPen)
-        except:
-            pass
-
-
-class ViewSourceFonts(object):
-    def __init__(self):
-        ## add an observer for the draw event
-        self.addObserver()
-        self.cacheCopy = None
-
-    def addObserver(self):
-        addObserver(self, "drawSourceFonts", "draw")
-
-    def removeObserver(self):
-        removeObserver(self, "draw")
-
-    def getSources(self):
-        sources = AllFonts()
-        if sources:
-            sources.pop(sources.index(CurrentFont()))
-            return sources
-        else:
-            return []
-    
-    def getAlignment(self):
-        return 'left'
-    
-    def drawSourceFonts(self, info):
-        glyph = info['glyph']
-        ## draw something the glyph view
-        
-        self.setStroke()
-        self.setFill()
-                
-        for source in self.getSources():
-            if source != CurrentFont():
-                if source.has_key(glyph.name):
-                    sourceGlyph = source[glyph.name]
-                    sourceFont = sourceGlyph.getParent()
-                    """
-                    if self.cacheCopy and self.cacheCopy.name == sourceGlyph.name:
-                        sourceGlyphCopy = self.cacheCopy
-                    else:
-                        sourceGlyphCopy = sourceGlyph.copy()
-                        self.cacheCopy = sourceGlyphCopy
-                    """
-                    sourceGlyphCopy = sourceGlyph.copy()
-                    
-                    align = self.getAlignment()
-                    if align == 'left':
-                        pass
-                    elif align == 'center':
-                        destCenter = int(glyph.width/2)
-                        sourceCenter = int(sourceGlyphCopy.width/2)
-                        widthDiff = destCenter-sourceCenter
-                        sourceGlyphCopy.move((widthDiff, 0))
-                    elif align == 'right':
-                        widthDiff = glyph.width-sourceGlyphCopy.width
-                        sourceGlyphCopy.move((widthDiff, 0))                        	
-
-                    mPen = MojoDrawingToolsPen(sourceGlyphCopy, sourceFont)
-                                        
-                    sourceGlyphCopy.draw(mPen)
-                    mPen.draw()
-                    self.updateView()
-
-    def setStroke(self, value=.5):
-        strokeWidth(value)
-    
-    def setFill(self, rgba=(.2, 0, .2, .2)):
-        r, g, b, a = rgba
-        fill(r, g, b, a)
-    
-    def getColor(self):
-        return NSColor.colorWithCalibratedRed_green_blue_alpha_(.5, 0, .5, .2)
+from ViewSourceFonts import ViewSourceFonts
 
 defaultKey = "com.fontbureau.viewSourceFonts"
 
@@ -158,23 +51,27 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
         ViewSourceFonts.__init__(self)
         
         self.sources = []
-        self.w = FloatingWindow((400, 200), "Overlay UFOs", minSize=(400, 200))
+        self.color = getExtensionDefaultColor("%s.%s" %(defaultKey, "color"), NSColor.colorWithCalibratedRed_green_blue_alpha_(.5, 0, .5, .1))
+        self.stroke = getExtensionDefault("%s.%s" %(defaultKey, "stroke"), False)
+        self.fill = getExtensionDefault("%s.%s" %(defaultKey, "fill"), True)
+        
+        self.w = FloatingWindow((300, 184), "Overlay UFOs", minSize=(300, 184))
 
         x = 10
         y = 10
 
-        self.w.view = CheckBox((x, y, -10, -10), "Show Overlays", 
+        self.w.view = CheckBox((x, y, -10, -10), "Overlays", 
                                              callback=self.viewCallback, 
                                              value=True)
 
 
-        self.w.defaultPaths = Button((-230, y, 30, 22), unichr(8634), callback=self.defaultPathsCallback)
+        self.w.defaultPaths = Button((-210, y, 30, 22), unichr(8634), callback=self.defaultPathsCallback)
 
-        self.w.addPath = Button((-200, y, 30, 22), '+', callback=self.addPathCallback)
-        self.w.removePath = Button((-170, y, 30, 22), '-', callback=self.removePathCallback)
-        self.w.clearPaths = Button((-140, y, 30, 22), 'x', callback=self.clearPathsCallback)
+        self.w.addPath = Button((-180, y, 30, 22), '+', callback=self.addPathCallback)
+        self.w.removePath = Button((-150, y, 30, 22), '-', callback=self.removePathCallback)
+        self.w.clearPaths = Button((-120, y, 30, 22), 'x', callback=self.clearPathsCallback)
 
-        self.w.fontList = List((10, 40, -110, -10), self.getDefaultSources(), 
+        self.w.fontList = List((10, 40, -90, -10), self.getDefaultSources(), 
                                drawFocusRing=True, 
                                enableDelete=True, 
                                otherApplicationDropSettings=dict(type=NSFilenamesPboardType, operation=NSDragOperationCopy, callback=self.dropCallback) 
@@ -183,33 +80,27 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
                 
         y = 40
         
-        self.w.fill = CheckBox((-100, y, 60, 22), "Fill", 
-                               #value=getExtensionDefault("%s.%s" %(defaultKey, "fill"), True),
-                               value = True,
+        self.w.fill = CheckBox((-80, y, 60, 22), "Fill", 
+                               value = self.fill,
                                callback=self.fillCallback)
         y += 30
-        self.w.stroke = CheckBox((-100, y, 60, 22), "Stroke", 
-                               #value=getExtensionDefault("%s.%s" %(defaultKey, "stroke"), False),
-                               value = False, 
+        self.w.stroke = CheckBox((-80, y, 60, 22), "Stroke", 
+                               value = self.stroke, 
                                callback=self.strokeCallback)
         
         y += 30
-        color = NSColor.colorWithCalibratedRed_green_blue_alpha_(.5, 0, .5, .1)
-
-        self.w.color = ColorWell((-100, y, 60, 22), 
-                                 color=color,
+        self.w.color = ColorWell((-80, y, 60, 22), 
+                                 color=self.color,
                                  callback=self.colorCallback)
         
-        
         y += 30
-        self.w.alignText = TextBox((-100, y, 90, 50), 'Alignment')
+        self.w.alignText = TextBox((-80, y, 90, 50), 'Alignment')
         y += 10
 
-        self.w.align = RadioGroup((-100, y, 60, 50), ['L', 'C', 'R'], isVertical=False, callback=self.alignCallback)
+        self.w.align = RadioGroup((-80, y, 60, 50), ['L', 'C', 'R'], isVertical=False, callback=self.alignCallback)
         self.w.align.set(0)
         
         self.setUpBaseWindowBehavior()
-        
         self.w.open()
         self.updateView()
 
@@ -218,7 +109,7 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
         acceptedFonts = [".ufo", ".ttf", ".otf"] 
         isProposal = dropInfo["isProposal"] 
         paths = dropInfo["data"]
-        paths = [path for path in paths if os.path.splitext(path)[-1].lower() in acceptedFonts] 
+        paths = [path for path in paths if splitext(path)[-1].lower() in acceptedFonts] 
         fonts = []
         for path in paths:
             if path:
@@ -250,11 +141,12 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
         self.updateView()
     
     def getDefaultSources(self):
-        sources = AllFonts()
-        return sources
+        return AllFonts()
     
     def addPathCallback(self, sender):
         f = OpenFont(None, showUI=False)
+        if f is None:
+            return
         sources = self.getSources()
         if type(f) is not list:
             f = [f]
@@ -278,45 +170,38 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
         self.updateView()
         
     def colorCallback(self, sender):
-        setExtensionDefaultColor("%s.%s" %(defaultKey, "color"), sender.get())
+        self.color = sender.get()
         self.updateView()
     
     def fillCallback(self, sender):
-        setExtensionDefault("%s.%s" %(defaultKey, "fill"), sender.get())
-        self.setFill()
+        self.fill = sender.get()
         self.updateView()
     
     def strokeCallback(self, sender):
-        setExtensionDefault("%s.%s" %(defaultKey, "stroke"), sender.get())
-        self.setStroke()
+        self.stroke = sender.get()
         self.updateView()
         
     def alignCallback(self, sender):
+        self.alignment = self.w.align.get()
         self.updateView()
-    
-    def getAlignment(self):
-        index = self.w.align.get()
-        if index == 0:
-            return 'left'
-        elif index == 1:
-            return 'center'
-        elif index == 2:
-            return 'right'
 
     def updateView(self, sender=None):
         UpdateCurrentGlyphView()
 
     def windowCloseCallback(self, sender):
-        self.removeObserver()
+        if self.w.view.get():
+            self.removeObserver()
         self.updateView()
+        setExtensionDefaultColor("%s.%s" %(defaultKey, "color"), (self.color))
+        setExtensionDefault("%s.%s" %(defaultKey, "stroke"), self.stroke)
+        setExtensionDefault("%s.%s" %(defaultKey, "fill"), self.fill)
         BaseWindowController.windowCloseCallback(self, sender)
         
     def getColor(self):
-        c = self.w.color.get()
-        return c.getRed_green_blue_alpha_(None, None, None, None)
+        return self.color.getRed_green_blue_alpha_(None, None, None, None)
 
     def setStroke(self):
-        if self.w.stroke.get():
+        if self.stroke:
             strokeWidth(.5)
             r,g,b,a = self.getColor()
             a += .3
@@ -324,15 +209,15 @@ class ViewSourceFontsDialog(BaseWindowController, ViewSourceFonts):
                 a = 1
             stroke(r, g, b, a)
         else:
-            strokeWidth(0)
-            stroke(1, 1, 1, 0)
+            #strokeWidth(0)
+            stroke(None)
     
     def setFill(self):
-        if self.w.fill.get():
+        if self.fill:
             r,g,b,a = self.getColor()
             fill(r,g,b,a)
         else:
-            fill(1, 1, 1, 0)
+            fill(None)
     
         
 ViewSourceFontsDialog()
