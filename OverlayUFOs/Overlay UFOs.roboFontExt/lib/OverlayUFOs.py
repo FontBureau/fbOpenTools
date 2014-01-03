@@ -73,7 +73,7 @@ class Tool():
                 del self.fonts[i]
 
     def getFontPaths(self):
-        return [f.path for f in self.getFonts()]
+        return [f.path or str(f.info.familyName)+" "+str(f.info.styleName) for f in self.getFonts()]
     
     def getFontLabel(self, path):
         if path is None:
@@ -87,8 +87,11 @@ class Tool():
     def getFontLabels(self):
         labels = {}
         for path in self.getFontPaths():
-            label = self.getFontLabel(path)
-            name = label[-1]
+            if path:
+                label = self.getFontLabel(path)
+                name = label[-1]
+            else:
+                name = 'Untitled'
             if not labels.has_key(name):
                 labels[name] = []
             labels[name].append(label)
@@ -358,6 +361,8 @@ class OverlayUFOs(BaseWindowController):
     def getHiddenFont(self, path):
         for f in self.tool.getFonts():
             if f.path == path:
+                return f
+            elif path == str(f.info.familyName)+" "+str(f.info.styleName):
                 return f
 
     def drawBackground(self, info):
