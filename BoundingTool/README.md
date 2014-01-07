@@ -13,9 +13,6 @@
 <dt>View All or Selected</dt>
 <dd>Toggle between getting the bounding box for the entire glyph vs. the current selection. The entire glyph is useful for centering accents, etc.</dd>
 
-<dt>View X and/or Y (checkboxes)</dt>
-<dd>Toggle on/off the x and y axis.</dd>
-
 <dt>Number of Divisions</dt>
 <dd>Standard mode (1 division) will display the total width and height of the bounding box. Alternately, you can choose to split the bounding box into halves, thirds, or quarters.</dd>
 
