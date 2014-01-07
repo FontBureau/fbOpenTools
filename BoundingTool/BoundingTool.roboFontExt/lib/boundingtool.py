@@ -1,3 +1,6 @@
+# Nina's customized version – also gives width/height of bounding box when subdiv=1 selected
+# eh plus a different color ^^
+
 from mojo.events import BaseEventTool, installTool, EditingTool
 from AppKit import *
 from defconAppKit.windows.baseWindow import BaseWindowController
@@ -13,10 +16,10 @@ class BoundingTool(EditingTool, BaseWindowController):
     u"""
     Shows the bounding box and useful divisions.
     """
-    color = (0, .8, .8)
+    color = (1, 0, .2)
     alpha = 1
-    divisionsStringList = ['2', '3', '4']
-    divisionsList = [2, 3, 4]
+    divisionsStringList = ['1', '2', '3', '4']
+    divisionsList = [1, 2, 3, 4]
     
     def getToolbarTip(self):
         return "bounding edit"
@@ -73,74 +76,77 @@ class BoundingTool(EditingTool, BaseWindowController):
             # draw a rectangle around the box    
             fill(1, 1, 1, 0)
             stroke(self.color[0], self.color[1], self.color[2], self.alpha)
-            dashLine(2)
+            dashLine(1)
             rect(xmin, ymin, width, height)
             # calculate the number of x and y divisions
             divisionsX = self.divisionsList[self.w.divisionsRadioX.get()]
             divisionsY = self.divisionsList[self.w.divisionsRadioY.get()]
             # draw a bit beyond the bbox
             extra = 20
-            if self.w.viewX.get():
-                #fontSize(8)
-                #fill(self.color[0], self.color[1], self.color[2], self.alpha)
-                #text(str(int(xmax)), (xmax, ymin - extra))    
-                offset = xmin
-                advance = float(width) / divisionsX
-                for i in range(divisionsX-1):
-                    xmid = offset + advance
-                    offset += advance
-                    newPath()
-                    moveTo((xmid, ymin - extra))
-                    lineTo((xmid, ymax + extra))
-                    closePath()
-                    #stroke(self.color[0], self.color[1], self.color[2], self.alpha)
-                    #dashLine(2)
-                    drawPath()
-                    fontSize(9)
-                    fill(self.color[0], self.color[1], self.color[2], self.alpha)
-                    text(str(int(xmid)), (xmid + 4, ymin - extra))
-            
-            if self.w.viewY.get():
-                #fontSize(8)
-                #fill(self.color[0], self.color[1], self.color[2], self.alpha)
-                #text(str(int(ymax)), (xmin - extra, ymax))
-                offset = ymin
-                advance = float(height) / divisionsY
-                for i in range(divisionsY-1):
-                    ymid = offset + advance
-                    offset += advance
-                    newPath()
-                    moveTo((xmin - extra, ymid))
-                    lineTo((xmax + extra, ymid))
-                    closePath()
-                    #stroke(self.color[0], self.color[1], self.color[2], self.alpha)
-                    #dashLine(2)
-                    drawPath()
-                    fontSize(9)
-                    fill(self.color[0], self.color[1], self.color[2], self.alpha)
-                    text(str(int(ymid)), (xmin - extra, ymid + 4))    
+            offset = xmin
+            advance = float(width) / divisionsX
+            for i in range(divisionsX-1): #subdivisions
+                xmid = offset + advance
+                offset += advance
+                newPath()
+                moveTo((xmid, ymin - extra))
+                lineTo((xmid, ymax + extra))
+                closePath()
+                drawPath()
+                fontSize(9)
+                fill(self.color[0], self.color[1], self.color[2], self.alpha)
+                text(str(int(xmid)), (xmid + 4, ymin - extra))
+            if divisionsX == 1: # width of bounding box
+                xmid = offset + float(width) / 2
+                fontSize(11)
+                fill(self.color[0], self.color[1], self.color[2], self.alpha)
+                text("w: "+str(width), (xmid-20, ymax + 10))             
+            #if self.w.viewY.get():
+            #fontSize(8)
+            #fill(self.color[0], self.color[1], self.color[2], self.alpha)
+            #text(str(int(ymax)), (xmin - extra, ymax))
+            offset = ymin
+            advance = float(height) / divisionsY
+            for i in range(divisionsY-1): # subdivisions
+                ymid = offset + advance
+                offset += advance
+                newPath()
+                moveTo((xmin - extra, ymid))
+                lineTo((xmax + extra, ymid))
+                closePath()
+                drawPath()
+                fontSize(9)
+                fill(self.color[0], self.color[1], self.color[2], self.alpha)
+                text(str(int(ymid)), (xmin - extra, ymid + 4)) 
+            if divisionsY == 1: # height of bounding box
+                ymid = offset + float(height) / 2
+                fontSize(12)
+                fill(self.color[0], self.color[1], self.color[2], self.alpha)
+                text("h: "+str(height), (xmax+10, ymid-10))      
                 
     def becomeActive(self):
         """
         Boot up the dialog.
         """
-        self.w = FloatingWindow((220, 130), "Bounding Options", minSize=(100, 100), closable=False)
+        self.w = FloatingWindow((260, 130), "Bounding Options", minSize=(100, 100), closable=False)
 
         self.w.viewOptions = RadioGroup((10, 10, 220, 20),
                                         ['Selection', 'All'],
                                         callback=self.callback, isVertical=False)
         self.w.viewOptions.set(0)
 
-        self.w.viewX = CheckBox((10, 40, 100, 20), "X Divisions",
-                                   callback=self.callback, value=True)
-        self.w.divisionsRadioX = RadioGroup((110, 40, 100, 20),
+        self.w.xLabel = TextBox((10, 40, 100, 20), "X Divisions")
+        #self.w.viewX = CheckBox((10, 40, 100, 20), "X Divisions",
+        #                           callback=self.callback, value=True)
+        self.w.divisionsRadioX = RadioGroup((110, 40, 140, 20),
                                         self.divisionsStringList,
                                         callback=self.callback, isVertical=False)
         self.w.divisionsRadioX.set(0)
 
-        self.w.viewY = CheckBox((10, 70, 100, 20), "Y Divisions",
-                                   callback=self.callback, value=True)
-        self.w.divisionsRadioY = RadioGroup((110, 70, 100, 20),
+        self.w.yLabel = TextBox((10, 70, 100, 20), "Y Divisions")
+        #self.w.viewY = CheckBox((10, 70, 100, 20), "Y Divisions",
+        #                           callback=self.callback, value=True)
+        self.w.divisionsRadioY = RadioGroup((110, 70, 140, 20),
                                         self.divisionsStringList,
                                         callback=self.callback, isVertical=False)
         self.w.divisionsRadioY.set(0)
@@ -178,20 +184,20 @@ class BoundingTool(EditingTool, BaseWindowController):
             height = ymax - ymin
             divisionsX = self.divisionsList[self.w.divisionsRadioX.get()]
             divisionsY = self.divisionsList[self.w.divisionsRadioY.get()]
-            if self.w.viewX.get():
-                offset = xmin
-                advance = float(width) / divisionsX
-                for i in range(divisionsX-1):
-                    xmid = offset + advance
-                    g.addGuide((xmid, ymin), 90)
-                    offset += advance
-            if self.w.viewY.get():
-                offset = ymin
-                advance = float(height) / divisionsY
-                for i in range(divisionsY-1):
-                    ymid = offset + advance
-                    g.addGuide((xmin, ymid), 0)
-                    offset += advance
+            #if self.w.viewX.get():
+            offset = xmin
+            advance = float(width) / divisionsX
+            for i in range(divisionsX-1):
+                xmid = offset + advance
+                g.addGuide((xmid, ymin), 90)
+                offset += advance
+            #if self.w.viewY.get():
+            offset = ymin
+            advance = float(height) / divisionsY
+            for i in range(divisionsY-1):
+                ymid = offset + advance
+                g.addGuide((xmin, ymid), 0)
+                offset += advance
             g.performUndo()
                     
     def drawBoxGuides(self, sender):
@@ -203,12 +209,12 @@ class BoundingTool(EditingTool, BaseWindowController):
         if selectedBox:
             g.prepareUndo()
             xmin, ymin, xmax, ymax = selectedBox
-            if self.w.viewX.get():
-                g.addGuide((xmin, ymin), 90)
-                g.addGuide((xmax, ymax), 90)
-            if self.w.viewY.get():
-                g.addGuide((xmin, ymin), 0)
-                g.addGuide((xmax, ymax), 0)
+            #if self.w.viewX.get():
+            g.addGuide((xmin, ymin), 90)
+            g.addGuide((xmax, ymax), 90)
+            #if self.w.viewY.get():
+            g.addGuide((xmin, ymin), 0)
+            g.addGuide((xmax, ymax), 0)
             g.performUndo()
 
 

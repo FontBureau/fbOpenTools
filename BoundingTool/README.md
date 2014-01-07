@@ -4,6 +4,8 @@
 
 <p>A subclass of the Robofont Editing Tool, Bounding Tool helps you visualize the bounding box of your current glyph. It is especially helpful if you are trying to center something, or divide something evenly into halves, thirds, or quarters.</p>
 
+<p>*This is Nina's edited version that adds display of width/height of bounding box, see below*</p>
+
 <p>The dialog box gives you some options:</p>
 
 <dl>
@@ -15,7 +17,7 @@
 <dd>Toggle on/off the x and y axis.</dd>
 
 <dt>Number of Divisions</dt>
-<dd>Choose whether to split the bounding box into halves, thirds, or quarters.</dd>
+<dd>Standard mode (1 division) will display the total width and height of the bounding box. Alternately, you can choose to split the bounding box into halves, thirds, or quarters.</dd>
 
 <dt>Div Guides</dt>
 <dd>Convert the current divisions into guides, which will stick around after the tool is deactivated.</dd>
