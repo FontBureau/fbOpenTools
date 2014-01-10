@@ -183,7 +183,8 @@ class AdjustMetrics(BaseWindowController):
                 currentIndex = x
         fsy += 5
         self.fs.fontSelect = List((fsx, fsy, -5, -5), fontNameList)
-        self.fs.fontSelect.setSelection([currentIndex])
+        if currentIndex is not None:
+            self.fs.fontSelect.setSelection([currentIndex])
         
         self.w.open()
         self.fs.open()
