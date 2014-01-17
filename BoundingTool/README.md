@@ -4,6 +4,9 @@
 
 <p>A subclass of the Robofont Editing Tool, Bounding Tool helps you visualize the bounding box of your current glyph. It will also display the box's dimensions, thanks to <a href="http://www.ninastoessinger.com/?l=e">Nina Stössinger</a>. You can use the division sliders if you are trying to center something, or divide something evenly into halves, thirds, or quarters.</p>
 
+<p>Note: I changed some things that might cause the icon to disappear when you install the new version. To fix this, uninstall your existing version of Bounding Tool (listed in Prefs > Extensions > Extensions), Quit RoboFont, reopen RoboFont, and finally, drag the latest BoundingTool.roboFontExt. Sorry for the trouble.</p>
+
+
 <p>The dialog box gives you some options:</p>
 
 <dl>
