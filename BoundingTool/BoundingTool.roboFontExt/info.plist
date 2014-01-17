@@ -20,5 +20,9 @@
 	<integer>1</integer>
 	<key>version</key>
 	<string>2.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>BoundingTool/BoundingTool.roboFontExt</string>
 </dict>
 </plist>
