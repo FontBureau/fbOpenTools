@@ -478,9 +478,9 @@ class AnchorPlacer(BaseWindowController):
                         )
         if g.box and self.getView().guides.get():
             boxWidth = g.box[2] - g.box[0]
-            leftX = g.angledLeftMargin + g.getParent().lib.get('com.typemytype.robofont.italicSlantOffset') or 0
-            rightX = g.width - g.angledRightMargin + g.getParent().lib.get('com.typemytype.robofont.italicSlantOffset') or 0
-            midX = leftX + (g.width - g.angledLeftMargin - g.angledRightMargin) / 2.0
+            leftX = g.angledLeftMargin or 0 + g.getParent().lib.get('com.typemytype.robofont.italicSlantOffset') or 0
+            rightX = g.width - g.angledRightMargin or 0 + g.getParent().lib.get('com.typemytype.robofont.italicSlantOffset') or 0
+            midX = leftX + (g.width - g.angledLeftMargin or 0 - g.angledRightMargin or 0) / 2.0
             dashLine(2)
             stroke(0, 0, 0, .3)
             

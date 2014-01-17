@@ -9,20 +9,16 @@
 	<key>developerURL</key>
 	<string>http://www.fontbureau.com</string>
 	<key>html</key>
-	<false/>
+	<true/>
 	<key>launchAtStartUp</key>
 	<integer>1</integer>
 	<key>mainScript</key>
-	<string>boundingtool.py</string>
+	<string>boundingTool.py</string>
 	<key>name</key>
-	<string>BoundingTool</string>
+	<string>Bounding Tool</string>
 	<key>timeStamp</key>
-	<real>1356840055.826797</real>
+	<integer>1</integer>
 	<key>version</key>
-	<string>1.0</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>BoundingTool/BoundingTool.roboFontExt</string>
+	<string>2.0</string>
 </dict>
 </plist>
