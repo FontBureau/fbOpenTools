@@ -1,4 +1,4 @@
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/BoundingTool/BoundingTool_preview.png" />
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/BoundingTool/BoundingTool_preview.png" style="max-width: 500px" />
 
 
 
