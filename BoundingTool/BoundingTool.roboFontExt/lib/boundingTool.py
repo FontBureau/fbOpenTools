@@ -81,7 +81,7 @@ class BoundingTool(EditingTool, BaseWindowController):
 
     def getBox(self, selected=True):
         g = self.getGlyph()
-        if g is not None:
+        if g is not None and g.box is not None:
             n = g
             if selected:
                 hasSelection = False
@@ -106,17 +106,13 @@ class BoundingTool(EditingTool, BaseWindowController):
                     rightX = n.width - n.angledRightMargin or 0 + g.getParent().lib.get('com.typemytype.robofont.italicSlantOffset') or 0
                 except:
                     leftX = rightX = 0
-                if n.box:
-                    topY = n.box[3]
-                    bottomY = n.box[1]
-                else:
-                    topY = 0
-                    bottomY = 0
-                #topY = g.getParent().info.ascender
-                #bottomY = g.getParent().info.descender
+
+                topY = n.box[3]
+                bottomY = n.box[1]
+
                 topX = TX.getItalicOffset(topY, italicAngle)
                 bottomX = TX.getItalicOffset(bottomY, italicAngle)
-
+                
                 box = (
                 (leftX+bottomX, bottomY), # bottom left
                 (leftX+topX, topY), # top left
@@ -160,8 +156,7 @@ class BoundingTool(EditingTool, BaseWindowController):
         showCoordinates = self.w.showCoordinates.get()
         showDimensions = self.w.showDimensions.get()
         
-        if self.w.viewOptions.get() == 0:
-            selectedBox = self.getBox(selected=True)
+        selectedBox = self.getBox(selected=True)
         
         if selectedBox:
             # switch them around so that we draw a line perpindicular to the axis we want to subdivide
