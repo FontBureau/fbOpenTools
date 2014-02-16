@@ -10,6 +10,9 @@ from mojo.events import addObserver, removeObserver
 from mojo.UI import CurrentGlyphWindow
 import unicodedata
 from fontTools.agl import AGL2UV
+import json
+
+
 
 class TX:
     @classmethod
@@ -98,7 +101,19 @@ nameMap = {
         'DNOM': 'Denominator',
         }
 
+BIGUNI = None
 
+def getCharName(char, dec=None, BIGUNI=BIGUNI):
+    if dec is None:
+        dec = ord(char)
+    try:
+        return unicodedata.name(char)
+    except:
+        if not BIGUNI:
+            bigUniFile = open('bigUni.json')
+            BIGUNI = json.loads(bigUniFile.read())
+        return BIGUNI.get(str(dec))
+        
 def getChar(dec):
     try:
         return unichr(dec)
@@ -135,10 +150,9 @@ def getGlyphInfo(g):
             if i == 0:
                 charString = char
             unicodeValueElements.append('U+'+TX.dec2hex(uv))
-            try:
-                unicodeNameElements.append(unicodedata.name(char))
-            except:
-                unicodeNameElements.append('UNTITLED')
+            charName = getCharName(char, uv)
+            if charName:
+                unicodeNameElements.append(charName)
     # the glyph name is a uniXXXX or a uXXXXX name, use those!
     if not unicodeValueElements:
         for i, uv in enumerate(TX.getUnicodeSequence(baseName) or []):
@@ -147,10 +161,9 @@ def getGlyphInfo(g):
             unicodeValueElements.append(u'! · ~U+'+TX.dec2hex(uv))
             if i > 0:
                 isLig = True
-            try:
-                unicodeNameElements.append(unicodedata.name(char))
-            except:
-                unicodeNameElements.append('UNTITLED')
+            charName = getCharName(char, uv)
+            if charName:
+                unicodeNameElements.append(charName)
     # the base name is in the adobe glyph list
     if not unicodeValueElements:
         for i, baseNameElement in enumerate(baseNameElements):
@@ -161,10 +174,9 @@ def getGlyphInfo(g):
                 char = getChar(uv)
                 charString += char
                 unicodeValueElements.append('~U+'+TX.dec2hex(uv))
-                try:
-                    unicodeNameElements.append(unicodedata.name(char))
-                except:
-                    unicodeNameElements.append('UNTITLED')
+                charName = getCharName(char, uv)
+                if charName:
+                    unicodeNameElements.append(charName)
     if not unicodeNameElements:
         unicodeNameElements.append(g.name)
 
