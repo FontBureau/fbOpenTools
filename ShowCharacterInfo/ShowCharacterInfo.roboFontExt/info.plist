@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>addToMenu</key>
+	<array/>
+	<key>developer</key>
+	<string>David Jonathan Ross</string>
+	<key>developerURL</key>
+	<string>http://www.fontbureau.com</string>
+	<key>html</key>
+	<false/>
+	<key>launchAtStartUp</key>
+	<integer>1</integer>
+	<key>mainScript</key>
+	<string>showCharacterInfo.py</string>
+	<key>name</key>
+	<string>Show Character Info</string>
+	<key>timeStamp</key>
+	<real>1366118749.7201691</real>
+	<key>version</key>
+	<string>1.0</string>
+	<key>repository</key>
+	<string>FontBureau/fbOpenTools</string>
+	<key>extensionPath</key>
+	<string>ShowCharacterInfo/ShowCharacterInfo.roboFontExt</string>
+</dict>
+</plist>
