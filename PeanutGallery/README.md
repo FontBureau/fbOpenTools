@@ -1,8 +1,4 @@
-<html>
-<head>
-<meta charset="utf-8" />
-</head>
-<body>
+
 
 <img src="https://github.com/FontBureau/fbOpenTools/raw/master/PeanutGallery/PeanutGallery_preview.png" />
 
@@ -44,5 +40,3 @@
 <li>Font-level comments</li>
 <li>Add CSV comment import/export</li>
 </ul>
-</body>
-</html>
