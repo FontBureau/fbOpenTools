@@ -225,4 +225,4 @@ class ShowCharacterInfo(BaseWindowController):
         removeObserver(self, "glyphWindowDidOpen")
 
 ShowCharacterInfo()
-print getGlyphInfo(CurrentGlyph())
+#print getGlyphInfo(CurrentGlyph())

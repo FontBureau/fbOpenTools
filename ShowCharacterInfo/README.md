@@ -12,4 +12,6 @@
 
 <p>Installing this extension will activate it; it doesn’t appear in menus.</p>
 
+<p>This is inspired by Frederik’s demo extension, <a href="http://doc.robofont.com/api/custom-observers/">DrawReferenceGlyph</a>.</p>
+
 <p>Released under MIT license.</p>
