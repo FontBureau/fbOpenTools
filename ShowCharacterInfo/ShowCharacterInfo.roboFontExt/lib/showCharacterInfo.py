@@ -11,8 +11,21 @@ from mojo.UI import CurrentGlyphWindow
 import unicodedata
 from fontTools.agl import AGL2UV
 import json
+import os
 
+nameMap = {
+        'ALT': 'Alternate',
+        'SALT': 'Stylistic Alternate',
+        'CALT': 'Contextual Alternate',
+        'SC': 'Small Cap',
+        'SMCP': 'Small Cap',
+        'SUPS': 'Superior',
+        'SINF': 'Inferior',
+        'NUMR': 'Numerator',
+        'DNOM': 'Denominator',
+        }
 
+BIGUNI = None
 
 class TX:
     @classmethod
@@ -89,19 +102,6 @@ class TX:
                 return False
         return True
 
-nameMap = {
-        'ALT': 'Alternate',
-        'SALT': 'Stylistic Alternate',
-        'CALT': 'Contextual Alternate',
-        'SC': 'Small Cap',
-        'SMCP': 'Small Cap',
-        'SUPS': 'Superior',
-        'SINF': 'Inferior',
-        'NUMR': 'Numerator',
-        'DNOM': 'Denominator',
-        }
-
-BIGUNI = None
 
 def getCharName(char, dec=None, BIGUNI=BIGUNI):
     if dec is None:
@@ -110,7 +110,7 @@ def getCharName(char, dec=None, BIGUNI=BIGUNI):
         return unicodedata.name(char)
     except:
         if not BIGUNI:
-            bigUniFile = open('bigUni.json')
+            bigUniFile = open(os.path.join(os.path.split(__file__)[0], 'bigUni.json'))
             BIGUNI = json.loads(bigUniFile.read())
         return BIGUNI.get(str(dec))
         
@@ -177,26 +177,45 @@ def getGlyphInfo(g):
                 charName = getCharName(char, uv)
                 if charName:
                     unicodeNameElements.append(charName)
-    if not unicodeNameElements:
-        unicodeNameElements.append(g.name)
-
+    # interpret this stuff into something to display
     suffixNameWords = []
     for suffixElement in suffixElements:
-        suffixNameWords.append(nameMap.get(suffixElement.upper()) or "'"+suffixElement+"'")
+        suffixLabel = nameMap.get(suffixElement.upper()) or "'"+suffixElement+"'"
+        if suffixLabel:
+            suffixNameWords.append(suffixLabel)
     featureInfo = u' '.join(suffixNameWords)
-    if featureInfo:
-        featureInfo = u', ' + featureInfo
+    unicodeNameDisplay = ''
 
-    if isLig:
-        charDisplay = u'%s · LIGATURE %s%s · %s' %(u'+'.join(unicodeValueElements), charString, featureInfo, charString)
+    # do special treatments for ligatures
+    if isLig and charString:
+        unicodeNameDisplay += 'LIGATURE ' + charString
     else:
-        charDisplay = u'%s · %s%s · %s' %(u' '.join(unicodeValueElements), unicodeNameElements[0], featureInfo,  charString)
-
+        if unicodeNameElements:
+            unicodeNameDisplay += unicodeNameElements[0]
+    if isLig:
+        uniValueSeparator = u'+'
+    else:
+        uniValueSeparator = u' '
+        
+    displayElements = []
+    if unicodeValueElements:
+        displayElements.append(uniValueSeparator.join(unicodeValueElements))
+    if unicodeNameDisplay:
+        displayElements.append(unicodeNameDisplay)
+    if featureInfo:
+        displayElements.append(featureInfo)
+    if charString:
+        displayElements.append(charString)
+    #if not displayElements:
+    #    displayElements.append('UNRECOGNIZED')
+    charDisplay = u' · '.join(displayElements)
     return charDisplay
 
 
 class ShowCharacterInfoBox(TextBox):
-
+    """
+    The subclassed vanilla text box.
+    """
     def __init__(self, *args, **kwargs):
 
         self.window = kwargs['window']
