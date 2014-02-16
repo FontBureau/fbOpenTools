@@ -1,4 +1,4 @@
-<img src="https://raw.github.com/FontBureau/fbOpenTools/master/ShowCharacterInfo/showCharacterInfo_preview.png" />
+<img src="https://raw.github.com/FontBureau/fbOpenTools/master/ShowCharacterInfo/ShowCharacterInfo_preview.png" />
 
 <p>In the current glyph window, this extension will unobtrusively display a readout of the unicode character represented by the current glyph, its hex unicode value(s), and the unicode name.</p>
 
