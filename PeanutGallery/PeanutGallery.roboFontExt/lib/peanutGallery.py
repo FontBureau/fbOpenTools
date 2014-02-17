@@ -55,7 +55,6 @@ COMMENT_TYPE_ORDER_1 = ['moveUpLeft', 'moveUp',  'moveUpRight', 'add', 'happy',
                         'moveLeft', 'comment', 'moveRight', 'subtract', 'surprise',
                         'moveDownLeft', 'moveDown', 'moveDownRight', 'saltire', 'cyclone']
 
-from roboflightlib.toolbox import CharacterTX
 import unicodedata
 
 try:
