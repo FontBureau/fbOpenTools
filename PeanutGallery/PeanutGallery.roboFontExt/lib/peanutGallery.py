@@ -7,9 +7,24 @@ from mojo.drawingTools import *
 from mojo.extensions import ExtensionBundle
 from vanilla import *
 from mojo.UI import UpdateCurrentGlyphView, setGlyphViewDisplaySettings, getGlyphViewDisplaySettings, CurrentGlyphWindow
-from roboflightlib.toolbox.storage.state import State
-from roboflightlib.toolbox import TX
 
+class TX: # Transformer
+    @classmethod
+    def isUniqueDict(cls, d):
+        if cls.isUniqueList(d.values()):
+            return True
+        else:
+            return False
+
+    @classmethod
+    def reverseDict(cls, d):
+        if not cls.isUniqueDict(d):
+            usedValues = []
+            duplicateValues = []
+            for v in d.values():
+                if v in usedValues:
+                    duplicateValues.append(v)
+                usedValues.append(v)
 
 COMMENT_LIB_KEY = 'com.fontbureau.comments'
 COMMENT_TYPE_ICONS = {
