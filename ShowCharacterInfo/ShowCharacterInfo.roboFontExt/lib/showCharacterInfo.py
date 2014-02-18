@@ -9,7 +9,10 @@ from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.events import addObserver, removeObserver
 from mojo.UI import CurrentGlyphWindow
 import unicodedata
-from fontTools.agl import AGL2UV
+try:
+    from lib.tools.agl import AGL2UV
+except:
+    from fontTools.agl import AGL2UV
 import json
 import os
 
