@@ -152,7 +152,12 @@ class AdjustMetrics(BaseWindowController):
         # Transform
         self.w.adjustBaseComponents = CheckBox((x, y, rightMargin, itemHeight), 'Adjust Comps with Selected')
         self.w.adjustBaseComponents.set(0)
-
+        
+        y += lineHeight
+        
+        # Transform
+        self.w.ignoreZeroWidth = CheckBox((x, y, rightMargin, itemHeight), 'Ignore Zero-Width Glyphs')
+        self.w.ignoreZeroWidth.set(1)
         
         self.w.apply = Button((x, -40, 100, itemHeight), 'Apply', callback=self.apply)
         self.w.cancel = Button((x+110, -40, 100, itemHeight), 'Close', callback=self.cancel)
@@ -236,6 +241,13 @@ class AdjustMetrics(BaseWindowController):
     def makeMetricsAdjustment(self, f, gnames):
         """
         """
+        if self.w.ignoreZeroWidth.get():
+            newGnames = []
+            for gname in gnames:
+                if f[gname].width != 0:
+                    newGnames.append(gname)
+            gnames = newGnames
+        
         if self.w.adjustComponents.get():
             adjustComponents = True
         else:

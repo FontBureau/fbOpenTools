@@ -1,3 +1,5 @@
+<p><strong>This extension has been superceded by Nina Stössinger’s excellent <a href="https://github.com/ninastoessinger/word-o-mat">word-o-mat</a> extension, which does everything this does and more. I would recommend using that instead.</strong></p>
+
 <img src="https://raw.github.com/FontBureau/fbOpenTools/master/RandomWordGenerator/randomWordGenerator_preview.png" />
 
 <p>This extension sticks a string of random words into your current space center. The computer sometimes has a sick mind, so don’t blame me for offensive words! If a space center is not open, it will simply print the random words into the output window.</p>

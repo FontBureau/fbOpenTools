@@ -1,3 +1,5 @@
+<p><strong>This extension has been superceded by <a href="https://github.com/FontBureau/fbOpenTools/tree/master/ShowMouseCoordinates">Show Mouse Coordinates</a>, which is better.</strong></p>
+
 <img src="https://raw.github.com/FontBureau/fbOpenTools/master/ShowDelta/showDelta_preview.png" />
 
 <p>In the current glyph window, this extension will provide a readout of the how far your mouse has been dragged. Installing it will activate it; it doesn’t appear in menus.</p>
