@@ -5,6 +5,7 @@
 
 <p>This extension helps with creating Italics on the font and glyph level, while drawing a "bowtie" in the Current Glyph Window to show the relationship of a font’s vertical and slanted sidebearings.</p>
 
+
 <h2>Font Adjustments</h2>
 
 <p>First, Set the italic angle you want in the Italic Bowtie dialog (usually a negative number).</p>
@@ -20,4 +21,4 @@
 
 <p>The italicize button will skew and offset your Current Glyph, Selected Glyphs, or All Glyphs in either the Current Font or All Open Fonts.</p>
 
-<p>If you select a reference layer, it will also draw a skewed and rotated glyph in a separate layer, for you to use as a reference as you fix the curves.</p>
+<p>If you select a reference layer, it will also draw a skewed and rotated glyph in a separate layer, for you to use as a reference as you fix the curves. This is based on a script by <a href="http://www.occupant.org">Cyrus Highsmith</a>.</p>
