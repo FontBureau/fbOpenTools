@@ -257,6 +257,7 @@ class OverlayUFOs(BaseWindowController):
             return
             
         glyph = info.get("glyph")
+        drawingScale = info.get('scale')
         
         if glyph is None:
             return
@@ -305,7 +306,7 @@ class OverlayUFOs(BaseWindowController):
                 if self._fill:
                     glyphBezierPath.fill()
                 if self._stroke:
-                    glyphBezierPath.setLineWidth_(self._strokeWidth)
+                    glyphBezierPath.setLineWidth_(self._strokeWidth*drawingScale)
                     strokePixelPath(glyphBezierPath)
                 previousGlyph = cbGlyph
             translate(totalWidth, 0)
@@ -332,7 +333,7 @@ class OverlayUFOs(BaseWindowController):
                 if self._fill:
                     glyphBezierPath.fill()
                 if self._stroke:
-                    glyphBezierPath.setLineWidth_(self._strokeWidth)
+                    glyphBezierPath.setLineWidth_(self._strokeWidth*drawingScale)
                     strokePixelPath(glyphBezierPath)
                 if self._points:
                     self.drawPoints(cbGlyph, info['scale'])
@@ -351,7 +352,7 @@ class OverlayUFOs(BaseWindowController):
                 if self._fill:
                     glyphBezierPath.fill()
                 if self._stroke:
-                    glyphBezierPath.setLineWidth_(self._strokeWidth)
+                    glyphBezierPath.setLineWidth_(self._strokeWidth*drawingScale)
                     strokePixelPath(glyphBezierPath)
                 translate(cbGlyph.width, 0)
                 totalWidth += cbGlyph.width + kernValue
@@ -363,7 +364,7 @@ class OverlayUFOs(BaseWindowController):
         save()
         _onCurveSize = self._onCurvePointsSize * scale
         _offCurveSize = self._offCurvePointsSize * scale
-        _strokeWidth = self._strokeWidth
+        _strokeWidth = self._strokeWidth * scale
         
         self._pointsColor.set()
         
