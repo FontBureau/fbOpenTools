@@ -362,7 +362,7 @@ class OverlayUFOs(BaseWindowController):
         for f in self.tool.getFonts():
             if f.path == path:
                 return f
-            elif path == str(f.info.familyName)+" "+str(f.info.styleName):
+            elif path == unicode(f.info.familyName)+" "+unicode(f.info.styleName):
                 return f
 
     def drawBackground(self, info):
