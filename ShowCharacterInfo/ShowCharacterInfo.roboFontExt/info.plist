@@ -24,5 +24,7 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>ShowCharacterInfo/ShowCharacterInfo.roboFontExt</string>
+	<key>summary</key>
+	<string>Unobtrusively display a readout of the unicode character represented by the current glyph, its hex unicode value(s), and unicode name.</string>
 </dict>
 </plist>
