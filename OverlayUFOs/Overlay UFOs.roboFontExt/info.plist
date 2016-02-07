@@ -33,5 +33,7 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>OverlayUFOs/Overlay UFOs.roboFontExt</string>
+	<key>summary</key>
+	<string>View an overlay of any glyphs from any font behind or beside what you are drawing.</string>
 </dict>
 </plist>

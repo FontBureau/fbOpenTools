@@ -24,5 +24,8 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>ShowMouseCoordinates/Show Mouse Coordinates.roboFontExt</string>
+	<key>summary</key>
+	<string>Get a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance.</string>
+
 </dict>
 </plist>

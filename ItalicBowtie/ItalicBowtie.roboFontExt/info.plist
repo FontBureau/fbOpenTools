@@ -33,5 +33,7 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>ItalicBowtie/ItalicBowtie.roboFontExt</string>
+	<key>summary</key>
+	<string>Visualize and set italic angle and offset values, and skew and reposition glyphs accordingly.</string>
 </dict>
 </plist>

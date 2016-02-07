@@ -33,5 +33,7 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>GlyphSelect/Glyph Select.roboFontExt</string>
+	<key>summary</key>
+	<string>Search for glyphs using a variety of parameters, such as glyph name, base name, suffix, unicode, and unicode category.</string>
 </dict>
 </plist>

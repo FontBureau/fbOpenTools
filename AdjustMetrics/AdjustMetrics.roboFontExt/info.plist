@@ -33,5 +33,8 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>AdjustMetrics/AdjustMetrics.roboFontExt</string>
+	<key>summary</key>
+	<string>Adjust the left margin, right margin, or both, with options for which glyphs in which fonts, and what to do with those pesky components.</string>
+
 </dict>
 </plist>

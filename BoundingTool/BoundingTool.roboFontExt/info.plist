@@ -24,5 +24,7 @@
 	<string>FontBureau/fbOpenTools</string>
 	<key>extensionPath</key>
 	<string>BoundingTool/BoundingTool.roboFontExt</string>
+	<key>summary</key>
+	<string>An editing tool that also helps you visualize the bounding box of your current glyph or selection.</string>
 </dict>
 </plist>
