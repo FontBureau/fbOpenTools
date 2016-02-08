@@ -29,12 +29,12 @@
 	<real>1340333208.607609</real>
 	<key>version</key>
 	<string>1.0</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>AdjustMetrics/AdjustMetrics.roboFontExt</string>
-	<key>summary</key>
-	<string>Adjust the left margin, right margin, or both, with options for which glyphs in which fonts, and what to do with those pesky components.</string>
-
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>FontBureau/fbOpenTools</string>
+		<key>summary</key>
+		<string>Adjust the left margin, right margin, or both, with options for which glyphs in which fonts, and what to do with those pesky components.</string>
+	</dict>
 </dict>
 </plist>

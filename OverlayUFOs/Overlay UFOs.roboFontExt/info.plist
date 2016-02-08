@@ -29,11 +29,12 @@
 	<real>1384253504.0</real>
 	<key>version</key>
 	<string>1.1</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>OverlayUFOs/Overlay UFOs.roboFontExt</string>
-	<key>summary</key>
-	<string>View an overlay of any glyphs from any font behind or beside what you are drawing.</string>
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>FontBureau/fbOpenTools</string>
+		<key>summary</key>
+		<string>View an overlay of any glyphs from any font behind or beside what you are drawing.</string>
+	</dict>
 </dict>
 </plist>

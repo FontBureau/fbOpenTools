@@ -20,12 +20,12 @@
 	<real>1366118749.7201691</real>
 	<key>version</key>
 	<string>1.0</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>ShowMouseCoordinates/Show Mouse Coordinates.roboFontExt</string>
-	<key>summary</key>
-	<string>Get a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance.</string>
-
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>FontBureau/fbOpenTools</string>
+		<key>summary</key>
+		<string>Get a readout of information about the mouse: its current position, how far it has been dragged, the dragging angle, and the dragging distance.</string>
+	</dict>
 </dict>
 </plist>
