@@ -29,12 +29,12 @@
 	<real>1</real>
 	<key>version</key>
 	<string>1.0</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>Accentista/Accentista.roboFontExt</string>
-	<key>summary</key>
-	<string>Overlay combining or floating accents over the Current Glyph, based on the name and position of the anchors.</string>
-
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>FontBureau/fbOpenTools</string>
+		<key>summary</key>
+		<string>Overlay combining or floating accents over the Current Glyph, based on the name and position of the anchors.</string>
+	</dict>
 </dict>
 </plist>

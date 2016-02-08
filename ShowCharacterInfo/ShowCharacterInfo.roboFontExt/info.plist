@@ -20,11 +20,12 @@
 	<real>1366118749.7201691</real>
 	<key>version</key>
 	<string>1.0</string>
-	<key>repository</key>
-	<string>FontBureau/fbOpenTools</string>
-	<key>extensionPath</key>
-	<string>ShowCharacterInfo/ShowCharacterInfo.roboFontExt</string>
-	<key>summary</key>
-	<string>Unobtrusively display a readout of the unicode character represented by the current glyph, its hex unicode value(s), and unicode name.</string>
+	<key>com.robofontmechanic.Mechanic</key>
+	<dict>
+		<key>repository</key>
+		<string>FontBureau/fbOpenTools</string>
+		<key>summary</key>
+		<string>Unobtrusively display a readout of the unicode character represented by the current glyph, its hex unicode value(s), and unicode name.</string>
+	</dict>
 </dict>
 </plist>
