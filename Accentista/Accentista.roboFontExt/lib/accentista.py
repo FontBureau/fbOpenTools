@@ -1,3 +1,4 @@
+from fontTools.misc.py23 import *
 from mojo.UI import CurrentGlyphWindow, UpdateCurrentGlyphView
 from mojo.events import addObserver, removeObserver
 from defconAppKit.windows.baseWindow import BaseWindowController
@@ -170,7 +171,7 @@ class CharacterTX:
                 320: {183: 775}
                 }
             for x, u in enumerate(decomp):
-                if overrides.has_key(charDec) and overrides[charDec].has_key(u):
+                if charDec in overrides and u in overrides[charDec]:
                     decomp[x] = overrides[charDec][u]
             charList = []
             for d in decomp:
@@ -224,18 +225,18 @@ class AnchorPlacer(BaseWindowController):
         if 'ABOVE' in name and d == 'i':
             d = u'ı'
         g = CharacterTX.char2Glyph(d, f)
-        if g is None and COMBINING2FLOATING.has_key(ord(d)):
+        if g is None and ord(d) in COMBINING2FLOATING:
             g = CharacterTX.char2Glyph(unichr(COMBINING2FLOATING[ord(d)]), f)
         if g is not None:
             if CurrentGlyph() and '.sc' in CurrentGlyph().name:
-                if f.has_key(g.name+'.sc'):
+                if g.name+'.sc' in f:
                     g = f[g.name+'.sc']
-            elif unicodedata.category(char) == 'Lu' and f.has_key(g.name+'.uc'):
+            elif unicodedata.category(char) == 'Lu' and g.name+'.uc' in f:
                 g = f[g.name+'.uc']
         if ord(char) in [317, 271, 318, 357] and ord(d) in [780, 711]:
-            if f.has_key('caroncmb.salt'):
+            if 'caroncmb.salt' in f:
                 g = f['caroncmb.salt']
-            elif f.has_key('caron.salt'):
+            elif 'caron.salt' in f:
                 g = f['caron.salt']
         return g
     
@@ -489,9 +490,9 @@ class AnchorPlacer(BaseWindowController):
             italicAngle = self.current.getParent().info.italicAngle or 0
             topX = TX.getItalicOffset(topY, italicAngle)
             bottomX = TX.getItalicOffset(bottomY, italicAngle)
-            line(leftX+topX, topY, leftX+bottomX, bottomY)
-            line(midX+topX, topY, midX+bottomX, bottomY)
-            line(rightX+topX, topY, rightX+bottomX, bottomY)
+            line((leftX+topX, topY), (leftX+bottomX, bottomY))
+            line((midX+topX, topY), (midX+bottomX, bottomY))
+            line((rightX+topX, topY), (rightX+bottomX, bottomY))
             
     def windowCloseCallback(self, sender):
         self.deactivateModule()
