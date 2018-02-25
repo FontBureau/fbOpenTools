@@ -14,9 +14,9 @@ class RandomWordsWindow:
         self.words = []
         self.charsInFont = []
         
-        wordsFile = open('/usr/share/dict/words', 'r')
-        wordsText = wordsFile.read()
-        self.allWords = wordsText.split('\n')
+        with open('/usr/share/dict/words', 'r') as wordsFile:
+            wordsText = wordsFile.read()
+            self.allWords = wordsText.split('\n')
 
         y = 10        
         self.w = Window((350, 100), 'Random Words')
@@ -112,6 +112,6 @@ class RandomWordsWindow:
         try:
             c.setRaw(' '.join(words))
         except:
-            print ' '.join(words)
+            print(' '.join(words))
 
 RandomWordsWindow()
