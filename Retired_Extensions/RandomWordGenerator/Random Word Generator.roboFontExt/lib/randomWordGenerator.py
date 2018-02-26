@@ -8,6 +8,7 @@ I am not responsible for naughty or otherwise inappropriate words!
 import random
 from vanilla import *
 from mojo.UI import *
+from builtins import chr
 
 class RandomWordsWindow:
     def __init__(self):
@@ -50,7 +51,7 @@ class RandomWordsWindow:
         for g in f:
             if not g.template:
                 for u in g.unicodes:
-                    chars.append(unichr(u))
+                    chars.append(chr(u))
         return chars
     
     def addWord(self, min=0, max=100, charLimit=None):
