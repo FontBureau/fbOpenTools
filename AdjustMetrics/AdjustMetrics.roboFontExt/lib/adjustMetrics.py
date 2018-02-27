@@ -5,6 +5,8 @@ from vanilla import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from AppKit import *
 import os.path
+from builtins import chr
+from mojo.roboFont import version
 
 def sortFonts(fonts):
     """
@@ -33,25 +35,42 @@ def sortFonts(fonts):
 
 def addMargins(f, gnames=[], leftUnits=0, rightUnits=0, adjustComponents=True):
     for gname in gnames:
-        if f.has_key(gname):
+        if gname in f:
             g = f[gname]
             g.prepareUndo('addMargins')
             # do left side
             if leftUnits != 0:
-                if g.box:
-                    g.leftMargin += leftUnits
+                # RF3
+                if version >= "3.0.0":
+                    if g.bounds:
+                        g.leftMargin += leftUnits
+                    else:
+                        g.width += leftUnits
+                # RF1
                 else:
-                    g.width += leftUnits
+                    if g.box:
+                        g.leftMargin += leftUnits
+                    else:
+                        g.width += leftUnits
+
                 if adjustComponents:
                     for comp in g.components:
                         if comp.baseGlyph in gnames:
                             comp.offset = (comp.offset[0]-leftUnits, comp.offset[1])
-                    #print 'adjusting', g, 'leftMargin by', leftUnits, 'units'
+                    #print('adjusting', g, 'leftMargin by', leftUnits, 'units')
             if rightUnits != 0:
-                if g.box:
-                    g.rightMargin += rightUnits
+                # RF3
+                if version >= "3.0.0":
+                    if g.bounds:
+                        g.rightMargin += rightUnits
+                    else:
+                        g.width += rightUnits
+                # RF1
                 else:
-                    g.width += rightUnits
+                    if g.box:
+                        g.rightMargin += rightUnits
+                    else:
+                        g.width += rightUnits
             g.performUndo()
     
 def multiplyMargins(f, gnames, leftMultiplier=1, rightMultiplier=1, roundValues=1, adjustComponents=True):
@@ -59,7 +78,7 @@ def multiplyMargins(f, gnames, leftMultiplier=1, rightMultiplier=1, roundValues=
     # Step 1: Compile records
     for gname in gnames:
         leftUnits, rightUnits = 0, 0
-        if f.has_key(gname):
+        if gname in f:
             g = f[gname]
             if leftMultiplier != 1:
                 leftUnits = (leftMultiplier * g.leftMargin) - g.leftMargin
@@ -71,7 +90,7 @@ def multiplyMargins(f, gnames, leftMultiplier=1, rightMultiplier=1, roundValues=
             marginRecords[g.name] = leftUnits, rightUnits
     # Make changes
     for gname in gnames:
-        if f.has_key(gname):
+        if gname in f:
             g = f[gname]
             g.prepareUndo('multiplyMargins')
             leftUnits, rightUnits = marginRecords[gname]
@@ -169,7 +188,7 @@ class AdjustMetrics(BaseWindowController):
         fsy = 5
         
         self.fs.selectAllFonts = Button((fsx, fsy, -55, itemHeight), 'Select All Fonts', callback=self.selectAllFonts, sizeStyle='small')
-        self.fs.refreshFontList = Button((-35, fsy, 30, 22), unichr(8634), callback=self.refreshFontList)
+        self.fs.refreshFontList = Button((-35, fsy, 30, 22), chr(8634), callback=self.refreshFontList)
 
         fsy += 25
         self.fs.deselectAllFonts = Button((fsx, fsy, -55, itemHeight), 'Deselect All Fonts', callback=self.deselectAllFonts, sizeStyle='small')
@@ -306,7 +325,7 @@ class AdjustMetrics(BaseWindowController):
                         additionalGnames.append(g.name)
                 gnames += additionalGnames
                         
-            print f, gnames
+            print(f, gnames)
             self.makeMetricsAdjustment(f, gnames)
                        
     def cancel(self, sender):
