@@ -145,22 +145,22 @@ class Italicalc:
         if doContours:
             for c in g.contours:
                 c.move((xoffset, 0))
-                if DEBUG: print '\t\t\t', c
+                if DEBUG: print('\t\t\t', c)
         # anchors
         if doAnchors:
             for anchor in g.anchors:
                 anchor.move((xoffset, 0))
-                if DEBUG: print '\t\t\t', anchor
+                if DEBUG: print('\t\t\t', anchor)
         # guides
         if doGuides:
             for guide in g.guides:
                 guide.x += xoffset
-                if DEBUG: print '\t\t\t', guide, guide.x
+                if DEBUG: print('\t\t\t', guide, guide.x)
                 # image
                 if doImage:
                     if g.image:
                         g.image.move((xoffset, 0))
-                        if DEBUG: print '\t\t\t', image 
+                        if DEBUG: print('\t\t\t', image)
         if doComponents:
             for c in g.components:
                 cxoffset = M.getItalicOffset(c.offset[1], italicAngle)
@@ -328,7 +328,7 @@ class ItalicBowtie(BaseWindowController, Italicalc):
             window = CurrentGlyphWindow()
             window.setGlyph(CurrentGlyph().naked())
         except:
-            print self.DEFAULTKEY, 'error resetting window, please refresh it'
+            print(self.DEFAULTKEY, 'error resetting window, please refresh it')
         self.updateView()
     
     def calcItalicCallback(self, sender):
@@ -382,7 +382,7 @@ class ItalicBowtie(BaseWindowController, Italicalc):
         try:
             return float(a)
         except:
-            print 'error', a
+            print('error', a)
             return 0
             
     def setItalicAngle(self, italicAngle):
@@ -419,7 +419,7 @@ class ItalicBowtie(BaseWindowController, Italicalc):
             self.drawItalicBowtie(italicAngle=italicAngle, crossHeight=crossHeight, ascender=ascender, descender=descender, italicSlantOffset=italicSlantOffsetOffset, xoffset=xoffset)
         dashLine(2)
         strokeWidth(1*scale)
-        line(0, crossHeight, g.width, crossHeight)        
+        line((0, crossHeight), (g.width, crossHeight))        
 
 
 
