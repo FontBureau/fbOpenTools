@@ -16,6 +16,7 @@ from vanilla import *
 from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
 from lib.tools.defaults import getDefault
 from lib.tools import bezierTools
+from mojo.roboFont import version
 
 bundle = ExtensionBundle("BoundingTool")
 toolbarIcon = bundle.getResourceImage("boundingTool")
@@ -81,7 +82,13 @@ class BoundingTool(EditingTool, BaseWindowController):
 
     def getBox(self, selected=True):
         g = self.getGlyph()
-        if g is not None and g.box is not None:
+        # RF3
+        if version >= "3.0.0":
+            gbox = g.bounds
+        # RF1
+        else:
+            gbox = g.box
+        if g is not None and gbox is not None:
             n = g
             if selected:
                 hasSelection = False
@@ -92,10 +99,16 @@ class BoundingTool(EditingTool, BaseWindowController):
                     n = g
             if self.w.useItalic.get():
                 italicAngle = g.getParent().info.italicAngle or 0
-                if n.box:
-                    boxTop = n.box[3]
-                    boxBottom = n.box[1]
-                    boxWidth = n.box[2] - n.box[0]
+                # RF3
+                if version >= "3.0.0":
+                    nbox = n.bounds
+                # RF1
+                else:
+                    nbox = n.box
+                if nbox:
+                    boxTop = nbox[3]
+                    boxBottom = nbox[1]
+                    boxWidth = nbox[2] - nbox[0]
                 else:
                     boxTop = g.getParent().info.ascender
                     boxBottom = g.getParent().info.descender
@@ -107,8 +120,8 @@ class BoundingTool(EditingTool, BaseWindowController):
                 except:
                     leftX = rightX = 0
 
-                topY = n.box[3]
-                bottomY = n.box[1]
+                topY = nbox[3]
+                bottomY = nbox[1]
 
                 topX = TX.getItalicOffset(topY, italicAngle)
                 bottomX = TX.getItalicOffset(bottomY, italicAngle)
@@ -121,12 +134,18 @@ class BoundingTool(EditingTool, BaseWindowController):
                 (n.naked().angledBounds[2]-n.naked().angledBounds[0], n.naked().angledBounds[3]-n.naked().angledBounds[1])
                 )
             else:
+                # RF3
+                if version >= "3.0.0":
+                    nbox = n.bounds
+                # RF1
+                else:
+                    nbox = n.box
                 box = (
-                    (n.box[0], n.box[1]),
-                    (n.box[0], n.box[3]),
-                    (n.box[2], n.box[3]),
-                    (n.box[2], n.box[1]),
-                    (n.box[2]-n.box[0], n.box[3]-n.box[1])
+                    (nbox[0], nbox[1]),
+                    (nbox[0], nbox[3]),
+                    (nbox[2], nbox[3]),
+                    (nbox[2], nbox[1]),
+                    (nbox[2]-nbox[0], nbox[3]-nbox[1])
                     ) 
         else:
             box = None #((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
@@ -149,7 +168,12 @@ class BoundingTool(EditingTool, BaseWindowController):
         fill(red, green, blue, alpha)
         stroke(red, green, blue, alpha)
         strokeWidth(1*scale)
-        dashLine(1)
+        # RF3
+        if version >= "3.0.0":
+            lineDash(1)
+        # RF1?
+        else:
+            dashLine(1)
         fontSizeValue = 8
         fontSize(fontSizeValue*scale)
         
@@ -191,11 +215,11 @@ class BoundingTool(EditingTool, BaseWindowController):
             ascOffset = TX.getItalicOffset(asc-pt3Y, italicAngle)
             descOffset = TX.getItalicOffset(desc-pt1Y, italicAngle)
 
-            line(pt1X+descOffset, desc, pt2X+ascOffset, asc)
-            line(pt4X+descOffset, desc, pt3X+ascOffset, asc)
+            line((pt1X+descOffset, desc), (pt2X+ascOffset, asc))
+            line((pt4X+descOffset, desc), (pt3X+ascOffset, asc))
 
-            line(pt1X-f.info.unitsPerEm, pt1Y, pt4X+f.info.unitsPerEm, pt1Y)
-            line(pt2X-f.info.unitsPerEm, pt2Y, pt3X+f.info.unitsPerEm, pt2Y)
+            line((pt1X-f.info.unitsPerEm, pt1Y), (pt4X+f.info.unitsPerEm, pt1Y))
+            line((pt2X-f.info.unitsPerEm, pt2Y), (pt3X+f.info.unitsPerEm, pt2Y))
             
             margin = 10*scale #((width + height) / 2) / 20
             
@@ -210,30 +234,30 @@ class BoundingTool(EditingTool, BaseWindowController):
                 widthYPos = pt2Y+margin+widthYBump               
                 if divisionsY > 1:
                     subWidthString = '    %s' %(TX.formatStringValue(width/divisionsY))
-                    text(subWidthString, widthXPos, widthYPos)
+                    text(subWidthString, (widthXPos, widthYPos))
                     widthYPos += fontSizeValue*scale
                 font("LucidaGrande-Bold")
                 text(widthString,
-                widthXPos,
-                widthYPos)
+                (widthXPos,
+                widthYPos))
                 
             if divisionsY >= 1:
                 xoffset = pt1X
                 for divY in range(divisionsY+1):
                     if divY != 0 and divY != divisionsY:
                         line( 
-                            xoffset-TX.getItalicOffset(margin, italicAngle),
-                            pt1Y-margin,
-                            xoffset + TX.getItalicOffset(pt2Y-pt1Y, italicAngle) + TX.getItalicOffset(margin, italicAngle),
-                            pt3Y+margin
+                            (xoffset-TX.getItalicOffset(margin, italicAngle),
+                            pt1Y-margin),
+                            (xoffset + TX.getItalicOffset(pt2Y-pt1Y, italicAngle) + TX.getItalicOffset(margin, italicAngle),
+                            pt3Y+margin)
                             )
                     if showCoordinates:
                         font("LucidaGrande")
                         x, y = bezierTools.angledPoint((xoffset, pt1Y), italicAngle, roundValue=italicAngle, reverse=-1)
-                        text('%s' %(TX.formatStringValue(x-italicSlantOffset)), xoffset-TX.getItalicOffset(margin, italicAngle)+2*scale, pt1Y-margin-fontSizeValue)
+                        text('%s' %(TX.formatStringValue(x-italicSlantOffset)), (xoffset-TX.getItalicOffset(margin, italicAngle)+2*scale, pt1Y-margin-fontSizeValue))
                         if italicAngle != 0:
                             x, y = bezierTools.angledPoint((xoffset, pt1Y), italicAngle, roundValue=italicAngle, reverse=-1)
-                            text('%s' %(TX.formatStringValue(x-italicSlantOffset)), xoffset+TX.getItalicOffset(pt3Y-pt1Y, italicAngle)+TX.getItalicOffset(margin, italicAngle)+2*scale, pt3Y+margin)
+                            text('%s' %(TX.formatStringValue(x-italicSlantOffset)), (xoffset+TX.getItalicOffset(pt3Y-pt1Y, italicAngle)+TX.getItalicOffset(margin, italicAngle)+2*scale, pt3Y+margin))
                     xoffset += rectWidth
 
             ###################
@@ -252,31 +276,31 @@ class BoundingTool(EditingTool, BaseWindowController):
                     subHeightString = '    %s' %(TX.formatStringValue(height/divisionsX))
                     text(
                         subHeightString,
-                        heightXPos,
-                        heightYPos,
+                        (heightXPos,
+                        heightYPos),
                         )
                     heightYPos += fontSizeValue*scale
                 
                 font("LucidaGrande-Bold")
                 text(heightString, 
-                heightXPos,
-                heightYPos
+                (heightXPos,
+                heightYPos)
                 )
             if divisionsX >= 1:
                 yoffset = pt1Y
                 for divX in range(divisionsX+1):
                     if divX != 0 and divX != divisionsX:
                         line( 
-                            pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin,
-                            yoffset,
-                            pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) + width + margin,
-                            yoffset
+                            (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin,
+                            yoffset),
+                            (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) + width + margin,
+                            yoffset)
                             )
                     if showCoordinates:
                         font("LucidaGrande")
                         text('%s' %(TX.formatStringValue(yoffset)), 
-                        pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin - 14*scale, 
-                        yoffset)
+                        (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin - 14*scale, 
+                        yoffset))
                     yoffset += rectHeight
             
                         
@@ -300,7 +324,7 @@ class BoundingTool(EditingTool, BaseWindowController):
 
         self.w.xLabel = TextBox((10, 40, 70, 20), "Divisions: X", sizeStyle="small")
 
-        self.w.divisionsRadioX = Slider((80, 40, 70, 20),
+        self.w.divisionsRadioX = Slider((80, 40, 70, 30),
         value=getExtensionDefault(self.DEFAULTKEY_DIVISIONSX, 1),
         minValue=1,
         maxValue=4,
@@ -311,7 +335,7 @@ class BoundingTool(EditingTool, BaseWindowController):
         callback=self.divisionsXCallback)
 
         self.w.yLabel = TextBox((160, 40, 70, 20), "Y", sizeStyle="small")
-        self.w.divisionsRadioY = Slider((175, 40, 70, 20),
+        self.w.divisionsRadioY = Slider((175, 40, 70, 30),
         value=getExtensionDefault(self.DEFAULTKEY_DIVISIONSY, 1),
         minValue=1,
         maxValue=4,
@@ -319,7 +343,7 @@ class BoundingTool(EditingTool, BaseWindowController):
         stopOnTickMarks=True,
         continuous=True,
         sizeStyle="small",
-         callback=self.divisionsYCallback)
+        callback=self.divisionsYCallback)
 
         self.w.drawGuidesButton = Button((10, 100, 90, 20), 'Div Guides', callback=self.drawDivGuides, sizeStyle="small")
         self.w.drawBoxGuidesButton = Button((120, 100, 90, 20), 'Box Guides', callback=self.drawBoxGuides, sizeStyle="small",)
@@ -414,13 +438,23 @@ class BoundingTool(EditingTool, BaseWindowController):
             advance = float(width) / divisionsX
             for i in range(divisionsX-1):
                 xmid = offset + advance
-                g.addGuide((xmid, pt1Y), 90+italicAngle)
+                # RF3
+                if version >= "3.0.0":
+                    g.appendGuideline((xmid, pt1Y), 90+italicAngle)
+                # RF1
+                else:
+                    g.addGuide((xmid, pt1Y), 90+italicAngle)
                 offset += advance
             offset = pt1Y
             advance = float(height) / divisionsY
             for i in range(divisionsY-1):
                 ymid = offset + advance
-                g.addGuide((pt1X, ymid), 0)
+                # RF3
+                if version >= "3.0.0":
+                    g.appendGuideline((pt1X, ymid), 0)
+                # RF1
+                else:
+                    g.addGuide((pt1X, ymid), 0)
                 offset += advance
             g.performUndo()
                     
@@ -444,11 +478,23 @@ class BoundingTool(EditingTool, BaseWindowController):
                 italicAngle = g.getParent().info.italicAngle or 0
             g.prepareUndo()
             #if self.w.viewX.get():
-            g.addGuide((pt1X, pt1Y), 90+italicAngle)
-            g.addGuide((pt3X, pt3Y), 90+italicAngle)
+            # RF3
+            if version >= "3.0.0":
+                g.appendGuideline((pt1X, pt1Y), 90+italicAngle)
+                g.appendGuideline((pt3X, pt3Y), 90+italicAngle)
+            # RF1
+            else:
+                g.addGuide((pt1X, pt1Y), 90+italicAngle)
+                g.addGuide((pt3X, pt3Y), 90+italicAngle)
             #if self.w.viewY.get():
-            g.addGuide((pt1X, pt1Y), 0)
-            g.addGuide((pt3X, pt3Y), 0)
+            # RF3
+            if version >= "3.0.0":
+                g.appendGuideline((pt1X, pt1Y), 0)
+                g.appendGuideline((pt3X, pt3Y), 0)
+            # RF1
+            else:
+                g.addGuide((pt1X, pt1Y), 0)
+                g.addGuide((pt3X, pt3Y), 0)
             g.performUndo()
 
     def updateView(self, sender=None):
