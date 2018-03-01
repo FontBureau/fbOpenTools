@@ -5,7 +5,6 @@ from vanilla import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from AppKit import *
 import os.path
-from builtins import chr
 from mojo.roboFont import version
 
 def sortFonts(fonts):
@@ -188,7 +187,7 @@ class AdjustMetrics(BaseWindowController):
         fsy = 5
         
         self.fs.selectAllFonts = Button((fsx, fsy, -55, itemHeight), 'Select All Fonts', callback=self.selectAllFonts, sizeStyle='small')
-        self.fs.refreshFontList = Button((-35, fsy, 30, 22), chr(8634), callback=self.refreshFontList)
+        self.fs.refreshFontList = Button((-35, fsy, 30, 22), u'↺', callback=self.refreshFontList)
 
         fsy += 25
         self.fs.deselectAllFonts = Button((fsx, fsy, -55, itemHeight), 'Deselect All Fonts', callback=self.deselectAllFonts, sizeStyle='small')
