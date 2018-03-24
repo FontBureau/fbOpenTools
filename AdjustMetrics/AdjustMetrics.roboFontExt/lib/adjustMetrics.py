@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-  
+# -*- coding: UTF-8 -*-
 #
 # ----------------------------------------------------------------------------------
 from vanilla import *
@@ -19,17 +19,17 @@ def sortFonts(fonts):
     # Adjust metrics.
     #
     """
-    
+
     Adjust both margins, left margin, or right margin
     To current glyph selection or all glyphs
     In current font or a selection of opened fonts
-    
+
     Options:
-        
+
         Adjust components (on by default): If 'A' is selected but not 'Aacute', 'Aacute' will be shifted back so it does not affect the original position.
-    
+
         Adjust Comps with Selected (off by default): If 'A' is selected, also transform 'Aacute' et. al.
-    
+
     """
 
 def addMargins(f, gnames=[], leftUnits=0, rightUnits=0, adjustComponents=True):
@@ -40,7 +40,7 @@ def addMargins(f, gnames=[], leftUnits=0, rightUnits=0, adjustComponents=True):
             # do left side
             if leftUnits != 0:
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     if g.bounds:
                         g.leftMargin += leftUnits
                     else:
@@ -59,7 +59,7 @@ def addMargins(f, gnames=[], leftUnits=0, rightUnits=0, adjustComponents=True):
                     #print('adjusting', g, 'leftMargin by', leftUnits, 'units')
             if rightUnits != 0:
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     if g.bounds:
                         g.rightMargin += rightUnits
                     else:
@@ -71,7 +71,7 @@ def addMargins(f, gnames=[], leftUnits=0, rightUnits=0, adjustComponents=True):
                     else:
                         g.width += rightUnits
             g.performUndo()
-    
+
 def multiplyMargins(f, gnames, leftMultiplier=1, rightMultiplier=1, roundValues=1, adjustComponents=True):
     marginRecords = {}
     # Step 1: Compile records
@@ -107,7 +107,7 @@ class AdjustMetrics(BaseWindowController):
     WINDOWTITLE                  = u'Adjust Metrics'
 
     def __init__(self):
-        
+
         #layout variables
         width = 250
         height = 500
@@ -122,9 +122,9 @@ class AdjustMetrics(BaseWindowController):
         current = CurrentFont()
 
         # Window
-                
+
         self.w = Window((width, height), self.WINDOWTITLE, autosaveName=self.WINDOWTITLE, minSize=(width, height))
-                
+
         # Adjust Both
         self.w.adjustBothText = TextBox((x, y, rightMargin, itemHeight), 'Adjust Both Margins')
         y+=lineHeight
@@ -143,7 +143,7 @@ class AdjustMetrics(BaseWindowController):
         self.w.adjustLeftUnit = RadioGroup((x, y, 120, itemHeight*2), ['Units', 'Percent'], callback=self.clearBothCallback)
         self.w.adjustLeftUnit.set(0)
         x = 20
-        y += lineHeight * 2.5       
+        y += lineHeight * 2.5
 
         # Adjust Right
         self.w.adjustRightText = TextBox((x, y, rightMargin, itemHeight), 'Adjust Right Margin')
@@ -154,7 +154,7 @@ class AdjustMetrics(BaseWindowController):
         self.w.adjustRightUnit.set(0)
         x = 20
         y += lineHeight * 2.5
- 
+
         # Glyph Selection
         self.w.glyphSelection = RadioGroup((x, y, rightMargin, itemHeight*2), ['Current Glyph Selection', 'All Glyphs'])
         self.w.glyphSelection.set(0)
@@ -166,26 +166,26 @@ class AdjustMetrics(BaseWindowController):
         self.w.adjustComponents.set(1)
 
         y += lineHeight
-        
+
         # Transform
         self.w.adjustBaseComponents = CheckBox((x, y, rightMargin, itemHeight), 'Adjust Comps with Selected')
         self.w.adjustBaseComponents.set(0)
-        
+
         y += lineHeight
-        
+
         # Transform
         self.w.ignoreZeroWidth = CheckBox((x, y, rightMargin, itemHeight), 'Ignore Zero-Width Glyphs')
         self.w.ignoreZeroWidth.set(1)
-        
+
         self.w.apply = Button((x, -40, 100, itemHeight), 'Apply', callback=self.apply)
         self.w.cancel = Button((x+110, -40, 100, itemHeight), 'Close', callback=self.cancel)
-        
+
         # Font Selection Drawer
 
         self.fs = Drawer((200, 150), self.w)
         fsx = 5
         fsy = 5
-        
+
         self.fs.selectAllFonts = Button((fsx, fsy, -55, itemHeight), 'Select All Fonts', callback=self.selectAllFonts, sizeStyle='small')
         self.fs.refreshFontList = Button((-35, fsy, 30, 22), u'↺', callback=self.refreshFontList)
 
@@ -208,7 +208,7 @@ class AdjustMetrics(BaseWindowController):
         self.fs.fontSelect = List((fsx, fsy, -5, -5), fontNameList)
         if currentIndex is not None:
             self.fs.fontSelect.setSelection([currentIndex])
-        
+
         self.w.open()
         self.fs.open()
 
@@ -225,18 +225,18 @@ class AdjustMetrics(BaseWindowController):
                 currentIndex = x
         self.fs.fontSelect.set(fontNameList)
         self.fs.fontSelect.setSelection([currentIndex])
-    
+
     def adjustBothUnitCallback(self, sender):
         self.w.adjustLeftUnit.set(sender.get())
         self.w.adjustRightUnit.set(sender.get())
-        
+
     def adjustBothValueCallback(self, sender):
         self.w.adjustLeftValue.set(sender.get())
         self.w.adjustRightValue.set(sender.get())
-    
+
     def clearBothCallback(self, sender):
         self.w.adjustBothValue.set('')
-     
+
     def selectAllFonts(self, sender):
         indexRange = range(0, len(self.fonts))
         self.fs.fontSelect.setSelection(indexRange)
@@ -265,7 +265,7 @@ class AdjustMetrics(BaseWindowController):
                 if f[gname].width != 0:
                     newGnames.append(gname)
             gnames = newGnames
-        
+
         if self.w.adjustComponents.get():
             adjustComponents = True
         else:
@@ -288,45 +288,45 @@ class AdjustMetrics(BaseWindowController):
                 rightValue = 0
             else:
                 rightValue = 1
-        
+
         if adjustLeftUnit == 0:
             if adjustRightUnit == 0:
                 addMargins(f, gnames, leftValue, rightValue, adjustComponents=adjustComponents)
             else:
-                addMargins(f, gnames, leftValue, 0, adjustComponents=adjustComponents)    
-                multiplyMargins(f, gnames, 1, rightValue*.01, adjustComponents=adjustComponents)    
+                addMargins(f, gnames, leftValue, 0, adjustComponents=adjustComponents)
+                multiplyMargins(f, gnames, 1, rightValue*.01, adjustComponents=adjustComponents)
         if adjustLeftUnit == 1:
             if adjustRightUnit == 1:
                 multiplyMargins(f, gnames, leftValue*.01, rightValue*.01, adjustComponents=adjustComponents)
             else:
-                multiplyMargins(f, gnames, leftValue*.01, 1, adjustComponents=adjustComponents)    
-                addMargins(f, gnames, 0, rightValue, adjustComponents=adjustComponents)    
+                multiplyMargins(f, gnames, leftValue*.01, 1, adjustComponents=adjustComponents)
+                addMargins(f, gnames, 0, rightValue, adjustComponents=adjustComponents)
         f.update()
-  
 
-  
+
+
     def apply(self, sender):
 
         fonts = self.getSelectedFonts()
-                
+
         for f in fonts:
 
             if self.w.glyphSelection.get() == 0:
                 gnames = CurrentFont().selection
             else:
                 gnames = f._object.keys()
-                
-        
+
+
             if self.w.adjustBaseComponents.get():
                 additionalGnames = []
                 for g in f:
                     if len(g.components) >= 1 and ( g.components[0].baseGlyph in gnames ) and ( g.name not in gnames ):
                         additionalGnames.append(g.name)
                 gnames += additionalGnames
-                        
+
             print(f, gnames)
             self.makeMetricsAdjustment(f, gnames)
-                       
+
     def cancel(self, sender):
         self.w.close()
 
