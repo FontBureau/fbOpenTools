@@ -26,9 +26,9 @@ except:
     pass
 
 class TX:
-    
+
     @classmethod
-    def formatStringValue(cls, f): return format(f, '.1f').rstrip('0').rstrip('.')    
+    def formatStringValue(cls, f): return format(f, '.1f').rstrip('0').rstrip('.')
     @classmethod
     def getItalicOffset(cls, yoffset, italicAngle):
         '''
@@ -73,17 +73,17 @@ class BoundingTool(EditingTool, BaseWindowController):
     alpha = 1
     divisionsStringList = ['1', '2', '3', '4']
     divisionsList = [1, 2, 3, 4]
-    
+
     def getToolbarTip(self):
         return self.NAME
-        
+
     def getToolbarIcon(self):
         return toolbarIcon
 
     def getBox(self, selected=True):
         g = self.getGlyph()
         # RF3
-        if version >= "3.0.0":
+        if version >= "3.0":
             gbox = g.bounds
         # RF1
         else:
@@ -100,7 +100,7 @@ class BoundingTool(EditingTool, BaseWindowController):
             if self.w.useItalic.get():
                 italicAngle = g.getParent().info.italicAngle or 0
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     nbox = n.bounds
                 # RF1
                 else:
@@ -125,7 +125,7 @@ class BoundingTool(EditingTool, BaseWindowController):
 
                 topX = TX.getItalicOffset(topY, italicAngle)
                 bottomX = TX.getItalicOffset(bottomY, italicAngle)
-                
+
                 box = (
                 (leftX+bottomX, bottomY), # bottom left
                 (leftX+topX, topY), # top left
@@ -135,7 +135,7 @@ class BoundingTool(EditingTool, BaseWindowController):
                 )
             else:
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     nbox = n.bounds
                 # RF1
                 else:
@@ -146,7 +146,7 @@ class BoundingTool(EditingTool, BaseWindowController):
                     (nbox[2], nbox[3]),
                     (nbox[2], nbox[1]),
                     (nbox[2]-nbox[0], nbox[3]-nbox[1])
-                    ) 
+                    )
         else:
             box = None #((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
         return box
@@ -155,7 +155,7 @@ class BoundingTool(EditingTool, BaseWindowController):
     def drawBackground(self, scale):
         g = self.getGlyph()
         self.fillColor.setFill()
-        
+
         slantCoordinates = self.slantPointCoordinates
         italicSlantOffset = 0
         if self.offsetPointCoordinates:
@@ -169,30 +169,30 @@ class BoundingTool(EditingTool, BaseWindowController):
         stroke(red, green, blue, alpha)
         strokeWidth(1*scale)
         # RF3
-        if version >= "3.0.0":
+        if version >= "3.0":
             lineDash(1)
         # RF1?
         else:
             dashLine(1)
         fontSizeValue = 8
         fontSize(fontSizeValue*scale)
-        
+
         showCoordinates = self.w.showCoordinates.get()
         showDimensions = self.w.showDimensions.get()
-        
+
         selectedBox = self.getBox(selected=True)
-        
+
         if selectedBox:
             # switch them around so that we draw a line perpindicular to the axis we want to subdivide
             divisionsY = int(self.w.divisionsRadioX.get())
             divisionsX = int(self.w.divisionsRadioY.get())
-            
+
             pt1, pt2, pt3, pt4, dimensions = selectedBox
             pt1X, pt1Y = pt1 # bottom left
             pt2X, pt2Y = pt2 # top left
             pt3X, pt3Y = pt3 # top right
             pt4X, pt4Y = pt4 # bottom right
-            
+
             pt1X += italicSlantOffset
             pt2X += italicSlantOffset
             pt3X += italicSlantOffset
@@ -211,7 +211,7 @@ class BoundingTool(EditingTool, BaseWindowController):
             f = g.getParent()
             asc = f.info.ascender + f.info.unitsPerEm
             desc = f.info.descender - f.info.unitsPerEm
-        
+
             ascOffset = TX.getItalicOffset(asc-pt3Y, italicAngle)
             descOffset = TX.getItalicOffset(desc-pt1Y, italicAngle)
 
@@ -220,18 +220,18 @@ class BoundingTool(EditingTool, BaseWindowController):
 
             line((pt1X-f.info.unitsPerEm, pt1Y), (pt4X+f.info.unitsPerEm, pt1Y))
             line((pt2X-f.info.unitsPerEm, pt2Y), (pt3X+f.info.unitsPerEm, pt2Y))
-            
+
             margin = 10*scale #((width + height) / 2) / 20
-            
-            
+
+
             if showDimensions:
                 widthYBump = 0
                 if italicAngle:
                     widthYBump = 20*scale
 
                 widthString = 'w: %s' %(TX.formatStringValue(width))
-                widthXPos = pt2X+(width/2.0)+TX.getItalicOffset(margin, italicAngle)-10*scale 
-                widthYPos = pt2Y+margin+widthYBump               
+                widthXPos = pt2X+(width/2.0)+TX.getItalicOffset(margin, italicAngle)-10*scale
+                widthYPos = pt2Y+margin+widthYBump
                 if divisionsY > 1:
                     subWidthString = '    %s' %(TX.formatStringValue(width/divisionsY))
                     text(subWidthString, (widthXPos, widthYPos))
@@ -240,12 +240,12 @@ class BoundingTool(EditingTool, BaseWindowController):
                 text(widthString,
                 (widthXPos,
                 widthYPos))
-                
+
             if divisionsY >= 1:
                 xoffset = pt1X
                 for divY in range(divisionsY+1):
                     if divY != 0 and divY != divisionsY:
-                        line( 
+                        line(
                             (xoffset-TX.getItalicOffset(margin, italicAngle),
                             pt1Y-margin),
                             (xoffset + TX.getItalicOffset(pt2Y-pt1Y, italicAngle) + TX.getItalicOffset(margin, italicAngle),
@@ -280,9 +280,9 @@ class BoundingTool(EditingTool, BaseWindowController):
                         heightYPos),
                         )
                     heightYPos += fontSizeValue*scale
-                
+
                 font("LucidaGrande-Bold")
-                text(heightString, 
+                text(heightString,
                 (heightXPos,
                 heightYPos)
                 )
@@ -290,7 +290,7 @@ class BoundingTool(EditingTool, BaseWindowController):
                 yoffset = pt1Y
                 for divX in range(divisionsX+1):
                     if divX != 0 and divX != divisionsX:
-                        line( 
+                        line(
                             (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin,
                             yoffset),
                             (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) + width + margin,
@@ -298,28 +298,28 @@ class BoundingTool(EditingTool, BaseWindowController):
                             )
                     if showCoordinates:
                         font("LucidaGrande")
-                        text('%s' %(TX.formatStringValue(yoffset)), 
-                        (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin - 14*scale, 
+                        text('%s' %(TX.formatStringValue(yoffset)),
+                        (pt1X + TX.getItalicOffset(yoffset-pt1Y, italicAngle) - margin - 14*scale,
                         yoffset))
                     yoffset += rectHeight
-            
-                        
-            
+
+
+
     def becomeActive(self):
         """
         Boot up the dialog.
         """
-        
+
         self.fillColor = getExtensionDefaultColor(self.DEFAULTKEY_FILLCOLOR, self.FALLBACK_FILLCOLOR)
         self.strokeColor = getExtensionDefaultColor(self.DEFAULTKEY_STROKECOLOR, self.FALLBACK_STROKECOLOR)
-        
+
         self.w = FloatingWindow((260, 130), "Bounding Options", minSize=(100, 100), closable=False)
 
         self.w.viewOptions = RadioGroup((10, 10, 150, 20),
                                         ['Selection', 'Glyph'],
                                         callback=self.selectionCallback, isVertical=False, sizeStyle="small")
         self.w.viewOptions.set(getExtensionDefault(self.DEFAULTKEY_SELECTION, 0))
-        
+
         self.w.useItalic = CheckBox((165, 10, 100, 20), "Use Italic", value=getExtensionDefault(self.DEFAULTKEY_USEITALIC, True), sizeStyle="small", callback=self.useItalicCallback)
 
         self.w.xLabel = TextBox((10, 40, 70, 20), "Divisions: X", sizeStyle="small")
@@ -333,6 +333,7 @@ class BoundingTool(EditingTool, BaseWindowController):
         continuous=True,
         sizeStyle="small",
         callback=self.divisionsXCallback)
+        self.w.divisionsRadioX._nsObject.setVertical_(False)
 
         self.w.yLabel = TextBox((160, 40, 70, 20), "Y", sizeStyle="small")
         self.w.divisionsRadioY = Slider((175, 40, 70, 30),
@@ -344,34 +345,35 @@ class BoundingTool(EditingTool, BaseWindowController):
         continuous=True,
         sizeStyle="small",
         callback=self.divisionsYCallback)
+        self.w.divisionsRadioY._nsObject.setVertical_(False)
 
         self.w.drawGuidesButton = Button((10, 100, 90, 20), 'Div Guides', callback=self.drawDivGuides, sizeStyle="small")
         self.w.drawBoxGuidesButton = Button((120, 100, 90, 20), 'Box Guides', callback=self.drawBoxGuides, sizeStyle="small",)
-            
+
 
         x = 10
         y = 70
         self.w.showCoordinates = CheckBox((x, y, 90, 20), "Coordinates", value=getExtensionDefault(self.DEFAULTKEY_SHOWCOORDINATES, True), sizeStyle="small", callback=self.showCoordinatesCallback)
         x += 90
         self.w.showDimensions = CheckBox((x, y, 90, 20), "Dimensions", value=getExtensionDefault(self.DEFAULTKEY_SHOWDIMENSIONS, True), sizeStyle="small", callback=self.showDimensionsCallback)
-            
-        
+
+
         x += 90
         color = getExtensionDefaultColor(self.DEFAULTKEY_FILLCOLOR, self.FALLBACK_FILLCOLOR)
-        self.w.color = ColorWell((x, y, 30, 22), 
+        self.w.color = ColorWell((x, y, 30, 22),
                 color=color,
                 callback=self.colorCallback)
 
         self.setUpBaseWindowBehavior()
         self.w.open()
-        
+
     def becomeInactive(self):
         """
         Remove the dialog when the tool is inactive.
         """
         self.windowCloseCallback(None)
         self.w.close()
-        
+
     def colorCallback(self, sender):
         """
         Change the color.
@@ -439,7 +441,7 @@ class BoundingTool(EditingTool, BaseWindowController):
             for i in range(divisionsX-1):
                 xmid = offset + advance
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     g.appendGuideline((xmid, pt1Y), 90+italicAngle)
                 # RF1
                 else:
@@ -450,14 +452,14 @@ class BoundingTool(EditingTool, BaseWindowController):
             for i in range(divisionsY-1):
                 ymid = offset + advance
                 # RF3
-                if version >= "3.0.0":
+                if version >= "3.0":
                     g.appendGuideline((pt1X, ymid), 0)
                 # RF1
                 else:
                     g.addGuide((pt1X, ymid), 0)
                 offset += advance
             g.performUndo()
-                    
+
     def drawBoxGuides(self, sender):
         """
         Draw guidelines for the current box.
@@ -479,7 +481,7 @@ class BoundingTool(EditingTool, BaseWindowController):
             g.prepareUndo()
             #if self.w.viewX.get():
             # RF3
-            if version >= "3.0.0":
+            if version >= "3.0":
                 g.appendGuideline((pt1X, pt1Y), 90+italicAngle)
                 g.appendGuideline((pt3X, pt3Y), 90+italicAngle)
             # RF1
@@ -488,7 +490,7 @@ class BoundingTool(EditingTool, BaseWindowController):
                 g.addGuide((pt3X, pt3Y), 90+italicAngle)
             #if self.w.viewY.get():
             # RF3
-            if version >= "3.0.0":
+            if version >= "3.0":
                 g.appendGuideline((pt1X, pt1Y), 0)
                 g.appendGuideline((pt3X, pt3Y), 0)
             # RF1
@@ -499,7 +501,7 @@ class BoundingTool(EditingTool, BaseWindowController):
 
     def updateView(self, sender=None):
         UpdateCurrentGlyphView()
-        
 
-    
+
+
 installTool(BoundingTool())
