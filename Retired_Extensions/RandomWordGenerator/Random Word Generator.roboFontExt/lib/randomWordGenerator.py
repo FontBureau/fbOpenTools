@@ -8,15 +8,16 @@ I am not responsible for naughty or otherwise inappropriate words!
 import random
 from vanilla import *
 from mojo.UI import *
+from builtins import chr
 
 class RandomWordsWindow:
     def __init__(self):
         self.words = []
         self.charsInFont = []
         
-        wordsFile = open('/usr/share/dict/words', 'r')
-        wordsText = wordsFile.read()
-        self.allWords = wordsText.split('\n')
+        with open('/usr/share/dict/words', 'r') as wordsFile:
+            wordsText = wordsFile.read()
+            self.allWords = wordsText.split('\n')
 
         y = 10        
         self.w = Window((350, 100), 'Random Words')
@@ -50,7 +51,7 @@ class RandomWordsWindow:
         for g in f:
             if not g.template:
                 for u in g.unicodes:
-                    chars.append(unichr(u))
+                    chars.append(chr(u))
         return chars
     
     def addWord(self, min=0, max=100, charLimit=None):
@@ -112,6 +113,6 @@ class RandomWordsWindow:
         try:
             c.setRaw(' '.join(words))
         except:
-            print ' '.join(words)
+            print(' '.join(words))
 
 RandomWordsWindow()

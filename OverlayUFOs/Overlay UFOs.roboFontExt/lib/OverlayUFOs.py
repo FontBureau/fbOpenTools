@@ -21,6 +21,8 @@ import unicodedata
 from lib.tools.drawing import strokePixelPath
 from lib.UI.spaceCenter.glyphSequenceEditText import splitText
 
+from builtins import chr
+
 selectedSymbol = u'•'
 
 def SmallTextListCell(editable=False):
@@ -92,7 +94,7 @@ class Tool():
                 name = label[-1]
             else:
                 name = 'Untitled'
-            if not labels.has_key(name):
+            if not name in labels:
                 labels[name] = []
             labels[name].append(label)
         sortedLabels = []
@@ -255,7 +257,7 @@ class OverlayUFOs(BaseWindowController):
         # or else the relative widths go wrong.
         view = self.getView()
         view.add = Button((-40, 3, 30, 22), '+', callback=self.addCallback)
-        view.reset = Button((-40, 30, 30, 22), unichr(8634), callback=self.resetCallback)
+        view.reset = Button((-40, 30, 30, 22), chr(8634), callback=self.resetCallback)
         # Flag to see if the selection list click is in progress. We are resetting the selection
         # ourselves, using the list "buttons", but changing that selection will cause another
         # list update, that should be ignored.
@@ -359,10 +361,11 @@ class OverlayUFOs(BaseWindowController):
     #    return False
 
     def getHiddenFont(self, path):
+        from builtins import str
         for f in self.tool.getFonts():
             if f.path == path:
                 return f
-            elif path == unicode(f.info.familyName)+" "+unicode(f.info.styleName):
+            elif path == str(f.info.familyName)+" "+str(f.info.styleName):
                 return f
 
     def drawBackground(self, info):
@@ -617,7 +620,7 @@ class OverlayUFOs(BaseWindowController):
                 currentStatuses[d['path']] = d['status']
 
         for status, path, uniqueName in self.tool.getFontLabels():
-            if currentStatuses.has_key(path):
+            if path in currentStatuses:
                 status = currentStatuses[path]
             else:
                 status = selectedSymbol
