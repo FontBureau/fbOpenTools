@@ -69,7 +69,7 @@ class TX:
         the component to the string made of this scalar value.</blockquote></doc>
         """
         unicodeList = None
-        if VERBOSE: print 'isUnicodeName, %s' % name
+        if VERBOSE: print('isUnicodeName, %s' % name)
         if len(name) > 3 and name[:3] == 'uni':
             unicodeSequence = name[3:]
             if len(unicodeSequence) / 4 == int(len(unicodeSequence) / 4):
