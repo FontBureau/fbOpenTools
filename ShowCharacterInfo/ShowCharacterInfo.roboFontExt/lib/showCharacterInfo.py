@@ -119,7 +119,7 @@ def getCharName(char, dec=None, BIGUNI=BIGUNI):
         
 def getChar(dec):
     try:
-        return unichr(dec)
+        return chr(dec)
     except:
         try:
             hexVersion = TX.dec2hex(dec)
