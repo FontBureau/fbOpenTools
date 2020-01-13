@@ -113,7 +113,7 @@ class Italicalc:
         x = math.radians(dx)
         y = math.radians(dy)
         m = m.skew(x,-y)
-        g.transform(m)
+        g.transform(tuple(m))
         top2 = g.box[3]
         bottom2 = g.box[1]
         height2 = top2 + abs(bottom2)
