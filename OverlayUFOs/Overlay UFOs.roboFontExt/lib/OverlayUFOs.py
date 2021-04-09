@@ -327,11 +327,22 @@ class OverlayUFOs(BaseWindowController):
         # Avoid recursive loop because of changing font selection
         if not self._selectionChanging:
             for selectedIndex in sender.getSelection():
+                    
                 item = sender.get()[selectedIndex]
+                
                 if item['status']:
                     item['status'] = ''
                 else:
                     item['status'] = selectedSymbol
+                        
+                if NSEvent.modifierFlags() & NSShiftKeyMask:
+                    items = [sender.get()[i] for i in range(len(sender.get())) if i != selectedIndex]
+                    for subItems in items:
+                        if item['status'] == '':
+                            subItems['status'] = selectedSymbol
+                        else:
+                            subItems['status'] = ''
+                    
             self._selectionChanging = True
             # Avoid recursive loop because of changing font selection
             sender.setSelection([])
