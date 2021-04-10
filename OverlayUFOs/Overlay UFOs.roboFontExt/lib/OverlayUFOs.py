@@ -332,6 +332,17 @@ class OverlayUFOs(BaseWindowController):
                     item['status'] = ''
                 else:
                     item['status'] = selectedSymbol
+                        
+                # If shift is held when pressing an entry in the font list, 
+                # the non-selected fonts will swap with the current's state
+                if NSEvent.modifierFlags() & NSShiftKeyMask:
+                    items = [sender.get()[i] for i in range(len(sender.get())) if i != selectedIndex]
+                    for subItems in items:
+                        if item['status'] == '':
+                            subItems['status'] = selectedSymbol
+                        else:
+                            subItems['status'] = ''
+                    
             self._selectionChanging = True
             # Avoid recursive loop because of changing font selection
             sender.setSelection([])
