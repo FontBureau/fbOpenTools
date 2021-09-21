@@ -100,7 +100,6 @@ def italicize(glyph,
         xoffset = offset
         # skew the glyph horizontally
         glyph.skew(-italicAngle, (0, 0))
-        glyph.prepareUndo()
         if doContours:
             for c in glyph.contours:
                 c.move((xoffset, 0))
