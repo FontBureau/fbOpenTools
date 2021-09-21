@@ -1,281 +1,247 @@
 #!/usr/bin/env python3
 
-from fontTools.pens.basePen import BasePen
-from defconAppKit.windows.baseWindow import BaseWindowController
-from mojo.events import addObserver, removeObserver
+import math
+from fontTools.misc.transform import Identity
+
 from vanilla import FloatingWindow, TextBox, EditText
 from vanilla import Button, RadioGroup, CheckBox
+
 from mojo.roboFont import CurrentFont, AllFonts, CurrentGlyph
-from mojo.drawingTools import moveTo, lineTo, curveTo, closePath, newPath, drawPath
-from mojo.drawingTools import fill, stroke, strokeWidth, lineDash, line
-from mojo.UI import UpdateCurrentGlyphView, CurrentGlyphWindow
+from mojo.UI import CurrentGlyphWindow
 from mojo.extensions import getExtensionDefault, setExtensionDefault
-from fontTools.misc.transform import Identity
-import math
+from mojo.subscriber import WindowController, Subscriber, registerGlyphEditorSubscriber
 
 
-class M:
-    ##################
-    # ITALIC OFFSET MATH
-    ##################
+######################
+# ITALIC OFFSET MATH #
+######################
 
-    @classmethod
-    def getItalicOffset(cls, yoffset, italicAngle):
-        '''
-        Given a y offset and an italic angle, calculate the x offset.
-        '''
-        from math import radians, tan
-        ritalicAngle = radians(italicAngle)
-        xoffset = int(round(tan(ritalicAngle) * yoffset))
-        return xoffset*-1
+def calcItalicOffset(yoffset, italicAngle):
+    '''
+    Given a y offset and an italic angle, calculate the x offset.
+    '''
+    from math import radians, tan
+    ritalicAngle = radians(italicAngle)
+    xoffset = int(round(tan(ritalicAngle) * yoffset))
+    return xoffset*-1
 
-    @classmethod
-    def getItalicRise(cls, xoffset, italicAngle):
-        '''
-        Given a x offset and an italic angle, calculate the y offset.
-        '''
-        from math import radians, tan
-        if italicAngle == 0:
-            return 0
-        ritalicAngle = radians(italicAngle)
-        yoffset = int(round( float(xoffset) / tan(ritalicAngle) ))
-        return yoffset
+def calcItalicRise(xoffset, italicAngle):
+    '''
+    Given a x offset and an italic angle, calculate the y offset.
+    '''
+    from math import radians, tan
+    if italicAngle == 0:
+        return 0
+    ritalicAngle = radians(italicAngle)
+    yoffset = int(round( float(xoffset) / tan(ritalicAngle) ))
+    return yoffset
 
-    @classmethod
-    def getItalicCoordinates(cls, coords, italicAngle):
-        """
-        Given (x, y) coords and an italic angle, get new coordinates accounting for italic offset.
-        """
-        x, y = coords
-        x += cls.getItalicOffset(y, italicAngle)
-        return x, y
-
-class DrawingToolsPen(BasePen):
+def calcItalicCoordinates(coords, italicAngle):
     """
-    A quick and easy pen that converts to DrawBot/Mojo Drawing Tools.
+    Given (x, y) coords and an italic angle, get new coordinates accounting for italic offset.
     """
-    def _moveTo(self, p1):
-        moveTo(p1)
+    x, y = coords
+    x += calcItalicOffset(y, italicAngle)
+    return x, y
 
-    def _lineTo(self, p1):
-        lineTo(p1)
-
-    def _curveToOne(self, p1, p2, p3):
-        curveTo(p1, p2, p3)
-
-    def _closePath(self):
-        closePath()
-
-
-class Italicalc:
+################
+# ITALIC TOOLS #
+################
+def calcItalicSlantOffset(italicAngle=0, crossHeight=0):
     """
-    Some classmethods for doing Italic calculations.
+    Get italic slant offset.
     """
+    return calcItalicOffset(-crossHeight, italicAngle)
 
-    @classmethod
-    def drawItalicBowtie(cls, italicAngle=0, crossHeight=0, italicSlantOffset=0, ascender=0, descender=0, xoffset=0):
-        """
-        Draw an italic Bowtie.
-        """
-        topBowtie = ascender
-        topBowtieOffset = M.getItalicOffset(topBowtie, italicAngle)
-        bottomBowtie = descender
-        bottomBowtieOffset = M.getItalicOffset(bottomBowtie, italicAngle)
-        path = DrawingToolsPen(None)
-        newPath()
-        path.moveTo((xoffset, descender))
-        path.lineTo((xoffset+bottomBowtieOffset+italicSlantOffset, descender))
-        path.lineTo((xoffset+topBowtieOffset+italicSlantOffset, ascender))
-        path.lineTo((xoffset, ascender))
-        closePath()
-        drawPath()
+def calcCrossHeight(italicAngle=0, italicSlantOffset=0):
+    return calcItalicRise(italicSlantOffset, italicAngle)
 
-    @classmethod
-    def calcItalicSlantOffset(cls, italicAngle=0, crossHeight=0):
-        """
-        Get italic slant offset.
-        """
-        return M.getItalicOffset(-crossHeight, italicAngle)
+def makeReferenceLayer(source, italicAngle, backgroundName='com.fontbureau.italicReference'):
+    """
+    Store a vertically skewed copy in the mask.
+    """
+    italicSlant = abs(italicAngle)
+    g = source.getLayer(backgroundName)
+    g.decompose()
+    source.copyToLayer(backgroundName)
+    # use for vertical offset later
+    top1 = g.box[3]
+    bottom1 = g.box[1]
+    height1 = top1 + abs(bottom1)
+    # vertical skew
+    m = Identity
+    dx = 0
+    dy = italicSlant/2.0   # half the italic angle
+    x = math.radians(dx)
+    y = math.radians(dy)
+    m = m.skew(x, -y)
+    g.transform(m)
+    top2 = g.box[3]
+    bottom2 = g.box[1]
+    height2 = top2 + abs(bottom2)
+    dif = (height1-height2) / 2
+    yoffset = (abs(bottom2)-abs(bottom1)) + dif
+    g.move((0, yoffset))
 
-    @classmethod
-    def calcCrossHeight(cls, italicAngle=0, italicSlantOffset=0):
-        return M.getItalicRise(italicSlantOffset, italicAngle)
-
-    @classmethod
-    def makeReferenceLayer(cls, source, italicAngle, backgroundName='com.fontbureau.italicReference'):
-        """
-        Store a vertically skewed copy in the mask.
-        """
-        italicSlant = abs(italicAngle)
-        g = source.getLayer(backgroundName)
-        g.decompose()
-        source.copyToLayer(backgroundName)
-        # use for vertical offset later
-        top1 = g.box[3]
-        bottom1 = g.box[1]
-        height1 = top1 + abs(bottom1)
-        # vertical skew
-        m = Identity
-        dx = 0
-        dy = italicSlant/2.0   # half the italic angle
-        x = math.radians(dx)
-        y = math.radians(dy)
-        m = m.skew(x, -y)
-        g.transform(m)
-        top2 = g.box[3]
-        bottom2 = g.box[1]
-        height2 = top2 + abs(bottom2)
-        dif = (height1-height2) / 2
-        yoffset = (abs(bottom2)-abs(bottom1)) + dif
-        g.move((0, yoffset))
-
-    @classmethod
-    def italicize(cls, g,
-                  italicAngle=None,
-                  offset=0,
-                  doContours = True,
-                  doAnchors = True,
-                  doGuides = True,
-                  doComponents = True,
-                  doImage = True,
-                  makeReferenceLayer=True,
-                  DEBUG=False):
-        """
-        Oblique a glyph using cap height and italic angle.
-        """
-        g.prepareUndo()
+def italicize(glyph,
+              italicAngle=None,
+              offset=0,
+              doContours = True,
+              doAnchors = True,
+              doGuides = True,
+              doComponents = True,
+              doImage = True,
+              shouldMakeReferenceLayer=True,
+              DEBUG=False):
+    """
+    Oblique a glyph using cap height and italic angle.
+    """
+    with glyph.undo("italicBowtie"):
         xoffset = offset
         # skew the glyph horizontally
-        g.skew(-italicAngle, (0, 0))
-        g.prepareUndo()
+        glyph.skew(-italicAngle, (0, 0))
+        glyph.prepareUndo()
         if doContours:
-            for c in g.contours:
+            for c in glyph.contours:
                 c.move((xoffset, 0))
                 if DEBUG:
-                    print('\t\t\t', c)
+                    print(f'\t\t\t {c}')
         # anchors
         if doAnchors:
-            for anchor in g.anchors:
+            for anchor in glyph.anchors:
                 anchor.move((xoffset, 0))
                 if DEBUG:
-                    print('\t\t\t', anchor)
+                    print(f'\t\t\t {anchor}')
         # guides
         if doGuides:
-            for guide in g.guides:
+            for guide in glyph.guides:
                 guide.x += xoffset
                 if DEBUG:
-                    print('\t\t\t', guide, guide.x)
+                    print(f'\t\t\t {guide} {guide.x}')
                 # image
                 if doImage:
-                    if g.image:
-                        g.image.move((xoffset, 0))
+                    if glyph.image:
+                        glyph.image.move((xoffset, 0))
                         if DEBUG:
-                            print('\t\t\t', g.image)
+                            print(f'\t\t\t {glyph.image}')
         if doComponents:
-            for c in g.components:
-                cxoffset = M.getItalicOffset(c.offset[1], italicAngle)
+            for c in glyph.components:
+                cxoffset = calcItalicOffset(c.offset[1], italicAngle)
                 c.offset = (c.offset[0]-cxoffset, c.offset[1])
 
-        if not g.components and makeReferenceLayer:
-            cls.makeReferenceLayer(g, italicAngle)
-        g.mark = (0, .1, 1, .2)
-        g.performUndo()
+        if not glyph.components and shouldMakeReferenceLayer:
+            makeReferenceLayer(glyph, italicAngle)
+        glyph.markColor = (0, .1, 1, .2)
 
-class Tool():
-    """
-    The tool object manages the font list. This is a simplification.
-    """
+############
+# THE TOOL #
+############
+class ItalicBowtie(Subscriber, WindowController):
 
-    def addObserver(self, target, method, action):
-        addObserver(target, method, action)
-
-    def removeObserver(self, target, method, action):
-        removeObserver(target, method, action)
-
-
-class ItalicBowtie(BaseWindowController, Italicalc):
     DEFAULTKEY = 'com.fontbureau.italicBowtie'
     DEFAULTKEY_REFERENCE = DEFAULTKEY + '.drawReferenceGlyph'
     italicSlantOffsetKey = 'com.typemytype.robofont.italicSlantOffset'
 
-    def activateModule(self):
-        self.tool.addObserver(self, 'drawInactive', 'drawInactive')
-        self.tool.addObserver(self, 'drawBackground', 'drawBackground')
+    debug = True
 
-    def deactivateModule(self):
-        removeObserver(self, 'drawBackground')
-        removeObserver(self, 'drawInactive')
+    def build(self):
+        glyphEditor = self.getGlyphEditor()
+        self.container = glyphEditor.extensionContainer(
+            identifier="com.roboFont.ItalicBowtie.background",
+            location="background",
+            clear=True)
 
-    def __init__(self):
-        self.tool = Tool()
+        self.crossHeightLayer = self.container.appendLineSublayer(
+            strokeWidth=1,
+            strokeColor=(.2, .1, .5, .5),
+            strokeDash=(2,)
+        )
+
+        fillColor = (.2, .1, .5, .05)
+        strokeColor = (.2, .1, .5, .5)
+        strokeWidth = 0.5
+        self.leftBowtieLayer = self.container.appendPathSublayer(
+            fillColor=fillColor,
+            strokeColor=strokeColor,
+            strokeWidth=strokeWidth
+        )
+        self.rightBowtieLayer = self.container.appendPathSublayer(
+            fillColor=fillColor,
+            strokeColor=strokeColor,
+            strokeWidth=strokeWidth
+        )
+
         self.w = FloatingWindow((325, 250), "Italic Bowtie")
-        self.populateView()
-        self.getView().open()
+        self.populateWindow()
 
-    def getView(self):
-        return self.w
+    def started(self):
+        self.w.open()
 
-    def populateView(self):
-        view = self.getView()
+    def destroy(self):
+        self.container.clearSublayers()
+
+    def glyphEditorGlyphDidChange(self, info):
+        self.updateBowtie()
+
+    def glyphEditorDidSetGlyph(self, info):
+        self.updateBowtie()
+
+    def populateWindow(self):
         y = 10
         x = 10
-        view.italicAngleLabel = TextBox((x, y+4, 100, 22), 'Italic Angle', sizeStyle="small")
+        self.w.italicAngleLabel = TextBox((x, y+4, 100, 22), 'Italic Angle', sizeStyle="small")
         x += 100
-        view.italicAngle = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
+        self.w.italicAngle = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
 
         y += 30
         x = 10
-        view.crossHeightLabel = TextBox((x, y+4, 95, 22), 'Cross Height', sizeStyle="small")
+        self.w.crossHeightLabel = TextBox((x, y+4, 95, 22), 'Cross Height', sizeStyle="small")
         x += 100
-        view.crossHeight = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
+        self.w.crossHeight = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
         x += 50
-        view.crossHeightSetUC = Button((x, y, 65, 22), 'Mid UC', sizeStyle="small", callback=self.calcItalicCallback)
+        self.w.crossHeightSetUC = Button((x, y, 65, 22), 'Mid UC', sizeStyle="small", callback=self.calcItalicCallback)
         x += 75
-        view.crossHeightSetLC = Button((x, y, 65, 22), 'Mid LC', sizeStyle="small", callback=self.calcItalicCallback)
+        self.w.crossHeightSetLC = Button((x, y, 65, 22), 'Mid LC', sizeStyle="small", callback=self.calcItalicCallback)
 
         y += 30
         x = 10
-        view.italicSlantOffsetLabel = TextBox((x, y+4, 100, 22), 'Italic Slant Offset', sizeStyle="small")
+        self.w.italicSlantOffsetLabel = TextBox((x, y+4, 100, 22), 'Italic Slant Offset', sizeStyle="small")
         x += 100
-        view.italicSlantOffset = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
+        self.w.italicSlantOffset = EditText((x, y, 40, 22), '', sizeStyle="small", callback=self.calcItalicCallback)
         x += 60
 
         y += 30
         x = 10
-        view.refresh = Button((x, y, 140, 22), u'Values from Current', callback=self.refresh, sizeStyle="small")
+        self.w.refresh = Button((x, y, 140, 22), u'Values from Current', callback=self.refresh, sizeStyle="small")
 
         y += 30
 
-        view.fontSelection = RadioGroup((x, y, 120, 35), ['Current Font', 'All Fonts'], sizeStyle="small")
-        view.fontSelection.set(0)
+        self.w.fontSelection = RadioGroup((x, y, 120, 35), ['Current Font', 'All Fonts'], sizeStyle="small")
+        self.w.fontSelection.set(0)
 
         x += 160
-        view.glyphSelection = RadioGroup((x, y, 120, 55), ['Current Glyph', 'Selected Glyphs', 'All Glyphs'], sizeStyle="small")
-        view.glyphSelection.set(0)
+        self.w.glyphSelection = RadioGroup((x, y, 120, 55), ['Current Glyph', 'Selected Glyphs', 'All Glyphs'], sizeStyle="small")
+        self.w.glyphSelection.set(0)
         y += 60
         x = 10
-        view.setInFont = Button((x, y, 140, 22), 'Set Font Italic Values', sizeStyle="small", callback=self.setInFontCallback)
+        self.w.setInFont = Button((x, y, 140, 22), 'Set Font Italic Values', sizeStyle="small", callback=self.setInFontCallback)
         x += 160
-        view.italicize = Button((x, y, 140, 22), 'Italicize Glyphs', sizeStyle="small", callback=self.italicizeCallback)
+        self.w.italicize = Button((x, y, 140, 22), 'Italicize Glyphs', sizeStyle="small", callback=self.italicizeCallback)
         y += 25
-        view.makeReferenceLayer = CheckBox((x, y, 145, 22), 'Make Reference Layer', value=getExtensionDefault(self.DEFAULTKEY_REFERENCE, False), sizeStyle="small", callback=self.makeReferenceLayerCallback)
+        self.w.makeReferenceLayer = CheckBox((x, y, 145, 22), 'Make Reference Layer', value=getExtensionDefault(self.DEFAULTKEY_REFERENCE, False), sizeStyle="small", callback=self.makeReferenceLayerCallback)
         x = 10
 
         self.refresh()
         if self.getItalicAngle() == 0 and CurrentFont() is not None:
             self.setCrossHeight((CurrentFont().info.capHeight or 0) / 2)
-        self.activateModule()
-        self.setUpBaseWindowBehavior()
-        self.updateView()
 
     def makeReferenceLayerCallback(self, sender):
         setExtensionDefault(self.DEFAULTKEY_REFERENCE, sender.get())
 
     def italicizeCallback(self, sender=None):
-        view = self.getView()
         italicAngle = self.getItalicAngle()
         italicSlantOffset = self.getItalicSlantOffset()
-        if view.fontSelection.get() == 0:
+        if self.w.fontSelection.get() == 0:
             if CurrentFont() is not None:
                 fonts = [CurrentFont()]
             else:
@@ -283,9 +249,9 @@ class ItalicBowtie(BaseWindowController, Italicalc):
         else:
             fonts = AllFonts()
 
-        if view.glyphSelection.get() == 0 and CurrentGlyph() is not None:
+        if self.w.glyphSelection.get() == 0 and CurrentGlyph() is not None:
             glyphs = [CurrentGlyph()]
-        elif view.glyphSelection.get() == 1:
+        elif self.w.glyphSelection.get() == 1:
             glyphs = []
             for f in fonts:
                 for gname in CurrentFont().selection:
@@ -298,16 +264,16 @@ class ItalicBowtie(BaseWindowController, Italicalc):
                     glyphs.append(g.name)
 
         for glyph in glyphs:
-            Italicalc.italicize(glyph, italicAngle,
-                                offset=italicSlantOffset,
-                                makeReferenceLayer=view.makeReferenceLayer.get())
+            italicize(glyph, italicAngle,
+                      offset=italicSlantOffset,
+                      shouldMakeReferenceLayer=self.w.makeReferenceLayer.get())
 
     def refresh(self, sender=None):
         f = CurrentFont()
         if f:
             italicSlantOffset = f.lib.get(self.italicSlantOffsetKey) or 0
             italicAngle = f.info.italicAngle or 0
-            crossHeight = Italicalc.calcCrossHeight(italicAngle=italicAngle,
+            crossHeight = calcCrossHeight(italicAngle=italicAngle,
                                                     italicSlantOffset=italicSlantOffset)
             self.setItalicSlantOffset(italicSlantOffset)
             self.setItalicAngle(italicAngle)
@@ -316,11 +282,10 @@ class ItalicBowtie(BaseWindowController, Italicalc):
             self.setItalicSlantOffset(0)
             self.setItalicAngle(0)
             self.setCrossHeight(0)
-        self.updateView()
+        self.updateBowtie()
 
     def setInFontCallback(self, sender):
-        view = self.getView()
-        if view.fontSelection.get() == 0:
+        if self.w.fontSelection.get() == 0:
             if CurrentFont() is not None:
                 fonts = [CurrentFont()]
             else:
@@ -328,65 +293,93 @@ class ItalicBowtie(BaseWindowController, Italicalc):
         else:
             fonts = AllFonts()
         for f in fonts:
-            f.prepareUndo()
-            f.info.italicAngle = self.getItalicAngle()
-            f.lib[self.italicSlantOffsetKey] = self.getItalicSlantOffset()
-            f.performUndo()
+            with f.undo('italicBowtie'):
+                f.info.italicAngle = self.getItalicAngle()
+                f.lib[self.italicSlantOffsetKey] = self.getItalicSlantOffset()
         try:
             window = CurrentGlyphWindow()
             window.setGlyph(CurrentGlyph().naked())
-        except:
+        except Exception:
             print(self.DEFAULTKEY, 'error resetting window, please refresh it')
-        self.updateView()
+        self.updateBowtie()
+
+    def drawItalicBowtie(self, layer,
+                         italicAngle=0, crossHeight=0, italicSlantOffset=0,
+                         ascender=0, descender=0, xoffset=0):
+        """
+        Draw an italic Bowtie.
+        """
+        topBowtie = ascender
+        topBowtieOffset = calcItalicOffset(topBowtie, italicAngle)
+        bottomBowtie = descender
+        bottomBowtieOffset = calcItalicOffset(bottomBowtie, italicAngle)
+
+        pen = layer.getPen()
+        pen.moveTo((xoffset, descender))
+        pen.lineTo((xoffset+bottomBowtieOffset+italicSlantOffset, descender))
+        pen.lineTo((xoffset+topBowtieOffset+italicSlantOffset, ascender))
+        pen.lineTo((xoffset, ascender))
+        pen.closePath()
 
     def calcItalicCallback(self, sender):
-        view = self.getView()
         italicAngle = self.getItalicAngle()
         italicSlantOffset = self.getItalicSlantOffset()
 
-        if sender == view.crossHeightSetUC and CurrentFont() is not None:
+        if sender == self.w.crossHeightSetUC and CurrentFont() is not None:
             crossHeight = ( CurrentFont().info.capHeight or 0 ) / 2.0
-            sender = view.crossHeight
-        elif sender == view.crossHeightSetLC and CurrentFont() is not None:
+            sender = self.w.crossHeight
+        elif sender == self.w.crossHeightSetLC and CurrentFont() is not None:
             crossHeight = ( CurrentFont().info.xHeight or 0 ) / 2.0
-            sender = view.crossHeight
+            sender = self.w.crossHeight
         else:
             crossHeight = self.getCrossHeight()
-        if sender == view.italicAngle or sender == view.italicSlantOffset:
-            self.setCrossHeight(Italicalc.calcCrossHeight(italicAngle=italicAngle, italicSlantOffset=italicSlantOffset))
-        elif sender == view.crossHeight:
-            self.setItalicSlantOffset(Italicalc.calcItalicSlantOffset(italicAngle=italicAngle, crossHeight=crossHeight))
+        if sender == self.w.italicAngle or sender == self.w.italicSlantOffset:
+            self.setCrossHeight(calcCrossHeight(italicAngle=italicAngle, italicSlantOffset=italicSlantOffset))
+        elif sender == self.w.crossHeight:
+            self.setItalicSlantOffset(calcItalicSlantOffset(italicAngle=italicAngle, crossHeight=crossHeight))
             self.setCrossHeight(crossHeight)
-        self.updateView()
+        self.updateBowtie()
 
-    def updateView(self, sender=None):
-        UpdateCurrentGlyphView()
-
-    def windowCloseCallback(self, sender):
-        self.deactivateModule()
-        self.updateView()
-        BaseWindowController.windowCloseCallback(self, sender)
+    def updateBowtie(self):
+        glyph = CurrentGlyph()
+        italicAngle = self.getItalicAngle()
+        italicSlantOffset = self.getItalicSlantOffset()
+        crossHeight = self.getCrossHeight()
+        ascender = glyph.font.info.ascender
+        descender = glyph.font.info.descender
+        italicSlantOffsetOffset = italicSlantOffset
+        for xoffset, layer in [(0, self.leftBowtieLayer), (glyph.width, self.rightBowtieLayer)]:
+            self.drawItalicBowtie(layer=layer,
+                                  italicAngle=italicAngle,
+                                  crossHeight=crossHeight,
+                                  ascender=ascender,
+                                  descender=descender,
+                                  italicSlantOffset=italicSlantOffsetOffset,
+                                  xoffset=xoffset)
+        # crossheight
+        self.crossHeightLayer.setStartPoint((0, crossHeight))
+        self.crossHeightLayer.setEndPoint((glyph.width, crossHeight))
 
     ################################
     ################################
     ################################
 
     def getItalicAngle(self):
-        a = self.getView().italicAngle.get()
+        a = self.w.italicAngle.get()
         try:
             return float(a)
         except ValueError:
             return 0
 
     def getItalicSlantOffset(self):
-        a = self.getView().italicSlantOffset.get()
+        a = self.w.italicSlantOffset.get()
         try:
             return float(a)
         except ValueError:
             return 0
 
     def getCrossHeight(self):
-        a = self.getView().crossHeight.get()
+        a = self.w.crossHeight.get()
         try:
             return float(a)
         except ValueError:
@@ -394,46 +387,14 @@ class ItalicBowtie(BaseWindowController, Italicalc):
             return 0
 
     def setItalicAngle(self, italicAngle):
-        view = self.getView()
-        view.italicAngle.set(str(italicAngle))
+        self.w.italicAngle.set(f'{italicAngle}')
 
     def setItalicSlantOffset(self, italicSlantOffset):
-        view = self.getView()
-        view.italicSlantOffset.set(str(italicSlantOffset))
+        self.w.italicSlantOffset.set(f'{italicSlantOffset}')
 
     def setCrossHeight(self, crossHeight):
-        view = self.getView()
-        view.crossHeight.set(str(crossHeight))
-
-    def drawBackground(self, info):
-        g = info.get('glyph')
-        scale = info.get('scale') or 1
-        if g is None:
-            return
-        fill(.2, .1, .5, .05)
-        stroke(.2, .1, .5, .5)
-        strokeWidth(.5*scale)
-        lineDash(0)
-        f = g.getParent()
-        italicAngle = self.getItalicAngle()
-        italicSlantOffset = self.getItalicSlantOffset()
-        crossHeight = self.getCrossHeight()
-        ascender = f.info.ascender
-        descender = f.info.descender
-        italicSlantOffsetOffset = italicSlantOffset
-        for xoffset in (0, g.width):
-            self.drawItalicBowtie(italicAngle=italicAngle,
-                                  crossHeight=crossHeight,
-                                  ascender=ascender,
-                                  descender=descender,
-                                  italicSlantOffset=italicSlantOffsetOffset,
-                                  xoffset=xoffset)
-        lineDash(2)
-        strokeWidth(1*scale)
-        line((0, crossHeight), (g.width, crossHeight))
-
-    drawInactive = drawBackground
+        self.w.crossHeight.set(f'{crossHeight}')
 
 
 if __name__ == '__main__':
-    ItalicBowtie()
+    registerGlyphEditorSubscriber(ItalicBowtie)
