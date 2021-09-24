@@ -288,7 +288,7 @@ class ItalicBowtie(BaseWindowController, Italicalc):
             glyphs = []
             for f in fonts:
                 for g in f:
-                    glyphs.append(g.name)
+                    glyphs.append(g)
         
         for glyph in glyphs:
             Italicalc.italicize(glyph, italicAngle, offset=italicSlantOffset, makeReferenceLayer=view.makeReferenceLayer.get())
