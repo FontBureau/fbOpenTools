@@ -66,7 +66,7 @@ class Tool():
         return self.fonts
         
     def appendToFonts(self, path):
-        f = OpenFont(path, showUI=False)
+        f = OpenFont(path, showInterface=False)
         self.fonts.append(f)
         
     def removeFromFonts(self, path):
@@ -239,7 +239,7 @@ class OverlayUFOs(BaseWindowController):
         """
         Open a font without UI and add it to the font list.
         """
-        f = OpenFont(None, showUI=False)
+        f = OpenFont(None, showInterface=False)
         if f is None:
             return
         self.tool.appendToFonts(f.path)
@@ -392,7 +392,7 @@ class OverlayUFOs(BaseWindowController):
         
         glyph = info.get('glyph')
         if glyph is not None:
-            current = glyph.getParent()
+            current = glyph.font
         else:
             current = self.tool.getCurrentFont()
         if glyph is None or current is None:
@@ -468,7 +468,7 @@ class OverlayUFOs(BaseWindowController):
                         sourceCenter = float(sourceGlyph.width/2) / font.info.unitsPerEm
                         widthOffset = (destCenter-sourceCenter) * font.info.unitsPerEm
                     elif align == 'right':
-                        widthOffset = ( (  glyph.width / glyph.getParent().info.unitsPerEm ) - (sourceGlyph.width / sourceGlyph.getParent().info.unitsPerEm ) ) * font.info.unitsPerEm
+                        widthOffset = ( (  glyph.width / glyph.font.info.unitsPerEm ) - (sourceGlyph.width / sourceGlyph.font.info.unitsPerEm ) ) * font.info.unitsPerEm
                 translate(widthOffset, 0)
                 
                 previousGlyph = sourceGlyph
@@ -476,7 +476,7 @@ class OverlayUFOs(BaseWindowController):
                 totalWidth = 0
                 for i, cbGlyph in enumerate(contextBefore):
                     kernValue = 0
-                    if previousGlyph is not None and previousGlyph.getParent() == cbGlyph.getParent():
+                    if previousGlyph is not None and previousGlyph.font == cbGlyph.font:
                         # Uncomment to activate kerning. Requires FontTX.
                         #kernValue += FontTX.kerning.getValue((previousGlyph.name, cbGlyph.name), font.kerning, font.groups)
                         kernValue += 0
@@ -510,7 +510,7 @@ class OverlayUFOs(BaseWindowController):
                             strokePixelPath(drawGlyphPath)
                     kernValue = 0
                     
-                    if cbGlyph is not None and nextGlyph is not None and nextGlyph.getParent() == cbGlyph.getParent():
+                    if cbGlyph is not None and nextGlyph is not None and nextGlyph.font == cbGlyph.font:
                         #kernValue = FontTX.kerning.getValue((cbGlyph.name, nextGlyph.name), font.kerning, font.groups)
                         # Uncomment to activate kerning. Requires FontTX.
                         kernValue = 0
