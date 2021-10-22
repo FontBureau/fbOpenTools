@@ -3,7 +3,18 @@
 <plist version="1.0">
 <dict>
 	<key>addToMenu</key>
-	<array/>
+	<array>
+		<dict>
+			<key>nestInSubmenus</key>
+			<true/>
+			<key>path</key>
+			<string>ItalicBowtie.py</string>
+			<key>preferredName</key>
+			<string>Italic Bowtie</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+	</array>
 	<key>developer</key>
 	<string>David Jonathan Ross and Cyrus Highsmith</string>
 	<key>developerURL</key>
@@ -21,7 +32,7 @@
 	<key>requiresVersionMinor</key>
 	<string>0</string>
 	<key>timeStamp</key>
-	<real>1634913249.5511549</real>
+	<real>1634916087.872215</real>
 	<key>version</key>
 	<string>1.1</string>
 </dict>
