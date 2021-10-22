@@ -3,18 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>addToMenu</key>
-	<array>
-		<dict>
-			<key>path</key>
-			<string>ItalicBowtie.py</string>
-			<key>preferredName</key>
-			<string>ItalicBowtie</string>
-			<key>shortKey</key>
-			<string></string>
-		</dict>
-	</array>
+	<array/>
 	<key>developer</key>
-	<string>David Jonathan Ross &amp; Cyrus Highsmith</string>
+	<string>David Jonathan Ross and Cyrus Highsmith</string>
 	<key>developerURL</key>
 	<string>http://www.fontbureau.com</string>
 	<key>html</key>
@@ -25,16 +16,13 @@
 	<string></string>
 	<key>name</key>
 	<string>Italic Bowtie</string>
+	<key>requiresVersionMajor</key>
+	<string>4</string>
+	<key>requiresVersionMinor</key>
+	<string>0</string>
 	<key>timeStamp</key>
-	<real>1392930656.779417</real>
+	<real>1634913249.5511549</real>
 	<key>version</key>
-	<string>1.0</string>
-	<key>com.robofontmechanic.Mechanic</key>
-	<dict>
-		<key>repository</key>
-		<string>FontBureau/fbOpenTools</string>
-		<key>summary</key>
-		<string>Visualize and set italic angle and offset values, and skew and reposition glyphs accordingly.</string>
-	</dict>
+	<string>1.1</string>
 </dict>
 </plist>

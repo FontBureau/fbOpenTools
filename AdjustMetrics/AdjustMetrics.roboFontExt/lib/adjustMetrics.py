@@ -123,7 +123,7 @@ class AdjustMetrics(BaseWindowController):
 
         # Window
 
-        self.w = Window((width, height), self.WINDOWTITLE, autosaveName=self.WINDOWTITLE, minSize=(width, height))
+        self.w = FloatingWindow((width, height), self.WINDOWTITLE, autosaveName=self.WINDOWTITLE, minSize=(width, height))
 
         # Adjust Both
         self.w.adjustBothText = TextBox((x, y, rightMargin, itemHeight), 'Adjust Both Margins')
@@ -301,9 +301,13 @@ class AdjustMetrics(BaseWindowController):
             else:
                 multiplyMargins(f, gnames, leftValue*.01, 1, adjustComponents=adjustComponents)
                 addMargins(f, gnames, 0, rightValue, adjustComponents=adjustComponents)
-        f.update()
 
-
+        # RF3
+        if version >= "3.0":
+            f.changed()
+        # RF1
+        else:
+            f.update()
 
     def apply(self, sender):
 
