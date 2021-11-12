@@ -26,11 +26,10 @@ ITALIC_SLANT_OFFSET_KEY = 'com.typemytype.robofont.italicSlantOffset'
 # -- Objects -- #
 class ItalicBowtieController(WindowController):
 
-    debug = True
-
     def build(self):
         self.w = FloatingWindow((325, 250), "Italic Bowtie")
         self.populateWindow()
+        self.w.open()
 
     def populateWindow(self):
         y = 10
@@ -230,8 +229,6 @@ class ItalicBowtieController(WindowController):
 
 class ItalicBowtie(Subscriber):
 
-    debug = True
-
     italicAngle = 0
     italicSlantOffset = 0
     crossHeight = 0
@@ -267,9 +264,9 @@ class ItalicBowtie(Subscriber):
         self.container.clearSublayers()
 
     def italicBowtieUpdateGlyphEditor(self, info):
-        self.italicAngle = info['lowLevelEvents'][0]['italicAngle']
-        self.italicSlantOffset = info['lowLevelEvents'][0]['italicSlantOffset']
-        self.crossHeight = info['lowLevelEvents'][0]['crossHeight']
+        self.italicAngle = info['italicAngle']
+        self.italicSlantOffset = info['italicSlantOffset']
+        self.crossHeight = info['crossHeight']
         self.updateBowtie()
 
     def italicBowtieRemoveBowtie(self, info):
@@ -317,12 +314,20 @@ class ItalicBowtie(Subscriber):
         self.crossHeightLayer.setEndPoint((glyph.width, self.crossHeight))
 
 
+def extractItalicBowtieValues(subscriber, info):
+    lastEvent = info["lowLevelEvents"][-1]
+    info["italicAngle"] = lastEvent["italicAngle"]
+    info["crossHeight"] = lastEvent["crossHeight"]
+    info["italicSlantOffset"] = lastEvent["italicSlantOffset"]
+
+
 if __name__ == '__main__':
 
     if f"{DEFAULT_KEY}.updateGlyphEditor" not in roboFontSubscriberEventRegistry:
         registerSubscriberEvent(
             subscriberEventName=f"{DEFAULT_KEY}.updateGlyphEditor",
             methodName="italicBowtieUpdateGlyphEditor",
+            eventInfoExtractionFunction=extractItalicBowtieValues,
             lowLevelEventNames=[f"{DEFAULT_KEY}.updateGlyphEditor"],
             dispatcher="roboFont",
             delay=0.02,
