@@ -1,4 +1,4 @@
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/OverlayUFOs_preview.png" />
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/source/resources/OverlayUFOs_preview.png" />
  
 <p>In the Current Glyph window, this extension will present an overlay of any glyph behind or beside what you are drawing. You can overlay glyphs from the Current Font or from any UFO.</p>
 
@@ -44,7 +44,7 @@
 
 <p>An screenshot showing contexts in use:</p>
 
-<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/OverlayUFOs_preview.02.png" />
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/source/resources/OverlayUFOs_preview.02.png" />
 
 
 
