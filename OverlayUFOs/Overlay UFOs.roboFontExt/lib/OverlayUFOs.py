@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import division
-
 """
 RA NOTES:
 - drop python2 support
@@ -10,44 +8,50 @@ RA NOTES:
 
 """
 
-"""
-# OVERLAY UFOS
-
-For anyone looking in here, sorry the code is so messy. This is a standalone version of a script with a lot of dependencies.
-"""
-
-from AppKit import NSFont, NSTextFieldCell, NSSmallControlSize
-from AppKit import NSColor
-from vanilla import FloatingWindow, Button, List, ColorWell, TextBox
-from vanilla import RadioGroup, CheckBox, EditText
-
-from mojo.drawingTools import scale, translate
-from mojo.roboFont import AllFonts, CurrentFont, OpenFont
-from mojo.events import addObserver, removeObserver
-from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
-from mojo.UI import UpdateCurrentGlyphView
+from AppKit import NSColor, NSFont, NSSmallControlSize, NSTextFieldCell
 from defconAppKit.windows.baseWindow import BaseWindowController
+from mojo.drawingTools import scale, translate
+from mojo.events import addObserver, removeObserver
+from mojo.extensions import (
+    getExtensionDefault,
+    getExtensionDefaultColor,
+    setExtensionDefault,
+    setExtensionDefaultColor,
+)
+from mojo.roboFont import AllFonts, CurrentFont, OpenFont
+from mojo.UI import UpdateCurrentGlyphView
+from vanilla import (
+    Button,
+    CheckBox,
+    ColorWell,
+    EditText,
+    FloatingWindow,
+    List,
+    RadioGroup,
+    TextBox,
+)
 
 from lib.tools.drawing import strokePixelPath
 from lib.UI.spaceCenter.glyphSequenceEditText import splitText
 
-from builtins import chr
+selectedSymbol = "•"
 
-selectedSymbol = u'•'
 
 def SmallTextListCell(editable=False):
     cell = NSTextFieldCell.alloc().init()
-    size = NSSmallControlSize   # NSMiniControlSize
+    size = NSSmallControlSize  # NSMiniControlSize
     cell.setControlSize_(size)
     font = NSFont.systemFontOfSize_(NSFont.systemFontSizeForControlSize_(size))
     cell.setFont_(font)
     cell.setEditable_(editable)
     return cell
 
+
 class TX:
     """
     An agnostic way to get a naked font.
     """
+
     @classmethod
     def naked(cls, f):
         try:
@@ -55,10 +59,12 @@ class TX:
         except Exception:
             return f
 
-class Tool():
+
+class Tool:
     """
     The tool object manages the font list. This is a simplification.
     """
+
     fonts = AllFonts()
 
     def addObserver(self, target, method, action):
@@ -71,8 +77,7 @@ class Tool():
         return CurrentFont()
 
     def getFonts(self):
-        u"""Answers the list of selected fonts, ordered by their path.
-        """
+        """Answers the list of selected fonts, ordered by their path."""
         return self.fonts
 
     def appendToFonts(self, path):
@@ -80,19 +85,19 @@ class Tool():
         self.fonts.append(f)
 
     def removeFromFonts(self, path):
-        for i, f in enumerate(self.fonts):
-            if f.path == path:
-                del self.fonts[i]
+        for index, font in enumerate(self.fonts):
+            if font.path == path:
+                del self.fonts[index]
 
     def getFontPaths(self):
-        return [f.path or str(f.info.familyName)+" "+str(f.info.styleName) for f in self.getFonts()]
+        return [f.path or str(f.info.familyName) + " " + str(f.info.styleName) for f in self.getFonts()]
 
     def getFontLabel(self, path):
         if path is None:
             return None
         if not path:
-            return 'Untitled'
-        name = path.split('/')[-1]
+            return "Untitled"
+        name = path.split("/")[-1]
         status = selectedSymbol
         return status, path, name
 
@@ -103,46 +108,49 @@ class Tool():
                 label = self.getFontLabel(path)
                 name = label[-1]
             else:
-                name = 'Untitled'
+                name = "Untitled"
             if name not in labels:
                 labels[name] = []
             labels[name].append(label)
         sortedLabels = []
         for _, labelSet in sorted(labels.items()):
-            if len(labelSet) == 1:   # There is only a single font with this name
+            if len(labelSet) == 1:  # There is only a single font with this name
                 sortedLabels.append(labelSet[0])
-            else:   # Otherwise we'll have to construct new names to show the difference
+            else:  # Otherwise we'll have to construct new names to show the difference
                 for status, path, name in sorted(labelSet):
-                    sortedLabels.append((status, path, '%s "%s"' % (name, '/'.join(path.split('/')[:-1]))))
+                    sortedLabels.append((status, path, '%s "%s"' % (name, "/".join(path.split("/")[:-1]))))
         return sortedLabels
+
 
 class C:
     """
     Some constants.
     """
+
     C2 = 100
     BUTTON_WIDTH = 80
-    STYLE_CHECKBOXSIZE = 'small'
-    STYLE_LABELSIZE = 'small'
-    STYLE_RADIOSIZE = 'small'
+    STYLE_CHECKBOXSIZE = "small"
+    STYLE_LABELSIZE = "small"
+    STYLE_RADIOSIZE = "small"
     L = 22
     LL = 25
+
 
 class OverlayUFOs(BaseWindowController):
 
     DEFAULTKEY = "com.fontbureau.overlayUFO"
-    DEFAULTKEY_FILLCOLOR = "%s.fillColor" % DEFAULTKEY
-    DEFAULTKEY_STROKECOLOR = "%s.strokeColor" % DEFAULTKEY
-    DEFAULTKEY_STROKE = "%s.stroke" % DEFAULTKEY
-    DEFAULTKEY_FILL = "%s.fill" % DEFAULTKEY
-    FALLBACK_FILLCOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(.5, 0, .5, .1)
-    FALLBACK_STROKECOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(.5, 0, .5, .5)
+    DEFAULTKEY_FILLCOLOR = f"{DEFAULTKEY}.fillColor"
+    DEFAULTKEY_STROKECOLOR = f"{DEFAULTKEY}.strokeColor"
+    DEFAULTKEY_STROKE = f"{DEFAULTKEY}.stroke"
+    DEFAULTKEY_FILL = f"{DEFAULTKEY}.fill"
+    FALLBACK_FILLCOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.1)
+    FALLBACK_STROKECOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.5)
 
     VERSION = 1.0
 
-    NAME = u'Overlay UFOs'
+    NAME = "Overlay UFOs"
 
-    MANUAL = u"""In the current glyph window, this will present the view the same glyph from a separate
+    MANUAL = """In the current glyph window, this will present the view the same glyph from a separate
     UFO or set of UFOs.<br/>
     This does NOT import the UFO into a background layer. Instead, it renders a outline directly from the UFO into the glyph window view.
     <ul>
@@ -182,9 +190,9 @@ class OverlayUFOs(BaseWindowController):
 
     def getPathListDescriptor(self):
         return [
-            dict(title='Status', key='status', cell=SmallTextListCell(editable=False), width=12, editable=False),
-            dict(title='Name',  key='name', width=300, cell=SmallTextListCell(editable=False), editable=False),
-            dict(title='Path', key='path', width=0, editable=False),
+            dict(title="Status", key="status", cell=SmallTextListCell(editable=False), width=12, editable=False),
+            dict(title="Name", key="name", width=300, cell=SmallTextListCell(editable=False), editable=False),
+            dict(title="Path", key="path", width=0, editable=False),
         ]
 
     ################
@@ -195,29 +203,29 @@ class OverlayUFOs(BaseWindowController):
         self.setSourceFonts()
 
     def activateModule(self):
-        self.tool.addObserver(self, 'drawInactive', 'drawInactive')
-        self.tool.addObserver(self, 'drawBackground', 'drawBackground')
-        self.tool.addObserver(self, 'fontDidOpen', 'fontDidOpen')
-        self.tool.addObserver(self, 'fontWillClose', 'fontWillClose')
+        self.tool.addObserver(self, "drawInactive", "drawInactive")
+        self.tool.addObserver(self, "drawBackground", "drawBackground")
+        self.tool.addObserver(self, "fontDidOpen", "fontDidOpen")
+        self.tool.addObserver(self, "fontWillClose", "fontWillClose")
 
     def deactivateModule(self):
-        removeObserver(self, 'drawBackground')
-        removeObserver(self, 'drawInactive')
-        removeObserver(self, 'fontDidOpen')
-        removeObserver(self, 'fontWillClose')
+        removeObserver(self, "drawBackground")
+        removeObserver(self, "drawInactive")
+        removeObserver(self, "fontDidOpen")
+        removeObserver(self, "fontWillClose")
 
     ################
     # CONTEXTS
     ################
 
     def fontDidOpen(self, info):
-        font = info.get('font')
+        font = info.get("font")
         if font:
             self.tool.fonts.append(font)
             self.refreshCallback()
 
     def fontWillClose(self, info):
-        font = info.get('font')
+        font = info.get("font")
         path = font.path
         if path:
             self.tool.removeFromFonts(path)
@@ -261,12 +269,12 @@ class OverlayUFOs(BaseWindowController):
         """
         self.fillColor = getExtensionDefaultColor(self.DEFAULTKEY_FILLCOLOR, self.FALLBACK_FILLCOLOR)
         self.strokeColor = getExtensionDefaultColor(self.DEFAULTKEY_STROKECOLOR, self.FALLBACK_STROKECOLOR)
-        self.contextBefore = self.contextAfter = ''
+        self.contextBefore = self.contextAfter = ""
 
         # Populating the view can only happen after the view is attached to the window,
         # or else the relative widths go wrong.
         view = self.getView()
-        view.add = Button((-40, 3, 30, 22), '+', callback=self.addCallback)
+        view.add = Button((-40, 3, 30, 22), "+", callback=self.addCallback)
         view.reset = Button((-40, 30, 30, 22), chr(8634), callback=self.resetCallback)
         # Flag to see if the selection list click is in progress. We are resetting the selection
         # ourselves, using the list "buttons", but changing that selection will cause another
@@ -279,7 +287,9 @@ class OverlayUFOs(BaseWindowController):
 
         x = y = 4
 
-        view.fontList = List((C.C2, y, 250, -65), self.getFontItems(),
+        view.fontList = List(
+            (C.C2, y, 250, -65),
+            self.getFontItems(),
             selectionCallback=self.fontListCallback,
             drawFocusRing=False,
             enableDelete=False,
@@ -290,58 +300,87 @@ class OverlayUFOs(BaseWindowController):
             columnDescriptions=self.getPathListDescriptor(),
             rowHeight=16,
         )
-        view.viewEnabled = CheckBox((x, y, C.BUTTON_WIDTH, 22), "Show",
-             callback=self.viewCallback, sizeStyle=C.STYLE_CHECKBOXSIZE,
-             value=True)
+        view.viewEnabled = CheckBox(
+            (x, y, C.BUTTON_WIDTH, 22), "Show", callback=self.viewCallback, sizeStyle=C.STYLE_CHECKBOXSIZE, value=True
+        )
         y += C.L
-        view.fill = CheckBox((x, y, 60, 22), "Fill", sizeStyle=C.STYLE_CHECKBOXSIZE,
-            #value=getExtensionDefault("%s.%s" %(self.DEFAULTKEY, "fill"), True),
-            value = True,
-            callback=self.fillCallback)
+        view.fill = CheckBox(
+            (x, y, 60, 22),
+            "Fill",
+            sizeStyle=C.STYLE_CHECKBOXSIZE,
+            # value=getExtensionDefault("%s.%s" %(self.DEFAULTKEY, "fill"), True),
+            value=True,
+            callback=self.fillCallback,
+        )
         y += C.L
         color = getExtensionDefaultColor(self.DEFAULTKEY_FILLCOLOR, self.FALLBACK_FILLCOLOR)
-        view.color = ColorWell((x, y, 60, 22),
-            color=color,
-            callback=self.colorCallback)
+        view.color = ColorWell((x, y, 60, 22), color=color, callback=self.colorCallback)
         y += C.L + 5
-        view.stroke = CheckBox((x, y, 60, 22), "Stroke", sizeStyle=C.STYLE_CHECKBOXSIZE,
-            #value=getExtensionDefault("%s.%s" %(self.DEFAULTKEY, "stroke"), False),
-            value = False,
-            callback=self.strokeCallback)
+        view.stroke = CheckBox(
+            (x, y, 60, 22),
+            "Stroke",
+            sizeStyle=C.STYLE_CHECKBOXSIZE,
+            # value=getExtensionDefault("%s.%s" %(self.DEFAULTKEY, "stroke"), False),
+            value=False,
+            callback=self.strokeCallback,
+        )
 
         y += C.LL
-        view.alignText = TextBox((x, y, 90, 50), 'Alignment', sizeStyle=C.STYLE_LABELSIZE)
+        view.alignText = TextBox((x, y, 90, 50), "Alignment", sizeStyle=C.STYLE_LABELSIZE)
         y += C.L
-        view.align = RadioGroup((x, y, 90, 50), ['Left', 'Center', 'Right'], isVertical=True,
-            sizeStyle=C.STYLE_RADIOSIZE, callback=self.alignCallback)
+        view.align = RadioGroup(
+            (x, y, 90, 50),
+            ["Left", "Center", "Right"],
+            isVertical=True,
+            sizeStyle=C.STYLE_RADIOSIZE,
+            callback=self.alignCallback,
+        )
         view.align.set(0)
 
-        #view.contextLabel = TextBox((C.C2, -58, 90, 50), 'Contexts', sizeStyle=C.STYLE_LABELSIZE)
+        # view.contextLabel = TextBox((C.C2, -58, 90, 50), 'Contexts', sizeStyle=C.STYLE_LABELSIZE)
 
-        view.viewCurrent = CheckBox((C.C2, -60, 150, 22), "Always View Current", sizeStyle=C.STYLE_CHECKBOXSIZE,
-            value = False,
-            callback=self.contextEditCallback)
+        view.viewCurrent = CheckBox(
+            (C.C2, -60, 150, 22),
+            "Always View Current",
+            sizeStyle=C.STYLE_CHECKBOXSIZE,
+            value=False,
+            callback=self.contextEditCallback,
+        )
 
-        #view.contextUandlc = CheckBox((C.C2+170, -60, 85, 22), "Match Case", sizeStyle=C.STYLE_CHECKBOXSIZE,
+        # view.contextUandlc = CheckBox((C.C2+170, -60, 85, 22), "Match Case", sizeStyle=C.STYLE_CHECKBOXSIZE,
         #    value = False,
         #    callback=self.contextEditCallback)
 
-        view.contextBefore = EditText((C.C2, -30, 85, 20), callback=self.contextEditCallback, continuous=True, sizeStyle="small", placeholder='Left Context')
-        view.contextCurrent = EditText((C.C2+95, -30, 60, 20), callback=self.contextCurrentEditCallback, continuous=True, sizeStyle="small")
-        view.contextAfter = EditText((C.C2+165, -30, 85, 20), callback=self.contextEditCallback, continuous=True, sizeStyle="small", placeholder='Right Context')
+        view.contextBefore = EditText(
+            (C.C2, -30, 85, 20),
+            callback=self.contextEditCallback,
+            continuous=True,
+            sizeStyle="small",
+            placeholder="Left Context",
+        )
+        view.contextCurrent = EditText(
+            (C.C2 + 95, -30, 60, 20), callback=self.contextCurrentEditCallback, continuous=True, sizeStyle="small"
+        )
+        view.contextAfter = EditText(
+            (C.C2 + 165, -30, 85, 20),
+            callback=self.contextEditCallback,
+            continuous=True,
+            sizeStyle="small",
+            placeholder="Right Context",
+        )
         self.activateModule()
         self.setUpBaseWindowBehavior()
 
     def fontListCallback(self, sender):
-        u"""If there is a selection, toggle the status of these fonts."""
+        """If there is a selection, toggle the status of these fonts."""
         # Avoid recursive loop because of changing font selection
         if not self._selectionChanging:
             for selectedIndex in sender.getSelection():
                 item = sender.get()[selectedIndex]
-                if item['status']:
-                    item['status'] = ''
+                if item["status"]:
+                    item["status"] = ""
                 else:
-                    item['status'] = selectedSymbol
+                    item["status"] = selectedSymbol
             self._selectionChanging = True
             # Avoid recursive loop because of changing font selection
             sender.setSelection([])
@@ -353,14 +392,15 @@ class OverlayUFOs(BaseWindowController):
 
     def getHiddenFont(self, path):
         from builtins import str
+
         for f in self.tool.getFonts():
             if f.path == path:
                 return f
-            elif path == str(f.info.familyName)+" "+str(f.info.styleName):
+            elif path == str(f.info.familyName) + " " + str(f.info.styleName):
                 return f
 
     def drawBackground(self, info):
-        u"""Draw the background of defined glyphs and fonbts.
+        """Draw the background of defined glyphs and fonbts.
         Scale is available as mouse.scale."""
         view = self.getView()
         if not view.viewEnabled.get():
@@ -369,7 +409,7 @@ class OverlayUFOs(BaseWindowController):
         stroke = getExtensionDefault(self.DEFAULTKEY_STROKE, True)
         fillcolor = getExtensionDefaultColor(self.DEFAULTKEY_FILLCOLOR, self.FALLBACK_FILLCOLOR)
 
-        glyph = info.get('glyph')
+        glyph = info.get("glyph")
         if glyph is not None:
             current = glyph.font
         else:
@@ -382,9 +422,9 @@ class OverlayUFOs(BaseWindowController):
         sourceItems = self.getSourceFonts()
         showFonts = []
         for item in sourceItems:
-            if not item['status']:
+            if not item["status"]:
                 continue
-            path = item['path']
+            path = item["path"]
             font = self.getHiddenFont(path)
             showFonts.append(font)
 
@@ -414,16 +454,19 @@ class OverlayUFOs(BaseWindowController):
                 else:
                     sourceGlyph = None
 
-                scale(current.info.unitsPerEm/float(font.info.unitsPerEm))
+                scale(current.info.unitsPerEm / float(font.info.unitsPerEm))
 
                 widthOffset = 0
                 if sourceGlyph is not None:
-                    if align == 'center':
-                        destCenter = float(glyph.width/2) / current.info.unitsPerEm
-                        sourceCenter = float(sourceGlyph.width/2) / font.info.unitsPerEm
-                        widthOffset = (destCenter-sourceCenter) * font.info.unitsPerEm
-                    elif align == 'right':
-                        widthOffset = ( (  glyph.width / glyph.font.info.unitsPerEm ) - (sourceGlyph.width / sourceGlyph.font.info.unitsPerEm ) ) * font.info.unitsPerEm
+                    if align == "center":
+                        destCenter = float(glyph.width / 2) / current.info.unitsPerEm
+                        sourceCenter = float(sourceGlyph.width / 2) / font.info.unitsPerEm
+                        widthOffset = (destCenter - sourceCenter) * font.info.unitsPerEm
+                    elif align == "right":
+                        widthOffset = (
+                            (glyph.width / glyph.font.info.unitsPerEm)
+                            - (sourceGlyph.width / sourceGlyph.font.info.unitsPerEm)
+                        ) * font.info.unitsPerEm
                 translate(widthOffset, 0)
 
                 previousGlyph = sourceGlyph
@@ -436,7 +479,7 @@ class OverlayUFOs(BaseWindowController):
                         # kernValue += FontTX.kerning.getValue((previousGlyph.name, cbGlyph.name), font.kerning, font.groups)
                         kernValue += 0
 
-                    translate(-cbGlyph.width-kernValue, 0)
+                    translate(-cbGlyph.width - kernValue, 0)
                     totalWidth += cbGlyph.width + kernValue
                     drawGlyphPath = TX.naked(cbGlyph).getRepresentation("defconAppKit.NSBezierPath")
                     if view.fill.get():
@@ -447,14 +490,14 @@ class OverlayUFOs(BaseWindowController):
                 translate(totalWidth, 0)
 
                 totalWidth = 0
-                contextCurrentAndAfter = [sourceGlyph]+contextAfter
+                contextCurrentAndAfter = [sourceGlyph] + contextAfter
 
                 for i, cbGlyph in enumerate(contextCurrentAndAfter):
                     if cbGlyph is None:
                         cbGlyph = sourceGlyph
                     nextGlyph = None
                     if i + 1 < len(contextCurrentAndAfter):
-                        nextGlyph = contextCurrentAndAfter[i+1]
+                        nextGlyph = contextCurrentAndAfter[i + 1]
                     if (i == 0 and cbGlyph == glyph) or sourceGlyph is None:
                         pass
                     else:
@@ -473,14 +516,14 @@ class OverlayUFOs(BaseWindowController):
                     width = 0
                     if cbGlyph is not None:
                         width = cbGlyph.width
-                    translate(width+kernValue, 0)
+                    translate(width + kernValue, 0)
                     totalWidth += width + kernValue
                     previousGlyph = cbGlyph
 
                 translate(-totalWidth, 0)
 
                 translate(-widthOffset, 0)
-                scale(font.info.unitsPerEm/float(current.info.unitsPerEm))
+                scale(font.info.unitsPerEm / float(current.info.unitsPerEm))
         # restore()
 
     drawInactive = drawBackground
@@ -496,20 +539,20 @@ class OverlayUFOs(BaseWindowController):
         return view.fontList.get()
 
     def setSourceFonts(self):
-        u"""
+        """
         Set the font list from the current set of open fonts.
         """
         view = self.getView()
         labels = []
         currentSelection = []
         for d in self.getSourceFonts():
-            if d['status']:
-                currentSelection.append(d['path'])
+            if d["status"]:
+                currentSelection.append(d["path"])
         for status, path, name in self.tool.getFontLabels():
             if path in currentSelection:
                 status = selectedSymbol
             else:
-                status = ''
+                status = ""
             labels.append(dict(status=status, path=path, name=name))
         view.fontList.set(labels)
 
@@ -556,11 +599,11 @@ class OverlayUFOs(BaseWindowController):
         view = self.getView()
         index = view.align.get()
         if index == 0:
-            return 'left'
+            return "left"
         elif index == 1:
-            return 'center'
+            return "center"
         elif index == 2:
-            return 'right'
+            return "right"
 
     def updateView(self, sender=None):
         UpdateCurrentGlyphView()
@@ -574,16 +617,16 @@ class OverlayUFOs(BaseWindowController):
         """
         Get all fonts in a way that can be set into a vanilla list.
         """
-        paths = set()   # Set of all unique paths in the merges lists
+        paths = set()  # Set of all unique paths in the merges lists
         itemsByName = {}
-        if update:   # If update flag is set, then keep the existing selected fonts.
+        if update:  # If update flag is set, then keep the existing selected fonts.
             for item in self.getSourceFonts():
-                if item['status']:
-                    itemsByName[item['name']] = item
+                if item["status"]:
+                    itemsByName[item["name"]] = item
         currentStatuses = {}
-        if hasattr(self.getView(), 'fontList'):
+        if hasattr(self.getView(), "fontList"):
             for d in self.getSourceFonts():
-                currentStatuses[d['path']] = d['status']
+                currentStatuses[d["path"]] = d["status"]
 
         for status, path, uniqueName in self.tool.getFontLabels():
             if path in currentStatuses:
@@ -591,7 +634,7 @@ class OverlayUFOs(BaseWindowController):
             else:
                 status = selectedSymbol
 
-            if uniqueName not in itemsByName.keys():   # If it is not already there, add this to the list
+            if uniqueName not in itemsByName.keys():  # If it is not already there, add this to the list
                 itemsByName[uniqueName] = dict(status=status, path=path, name=uniqueName)
         fontList = []
         for key, item in sorted(itemsByName.items()):
@@ -603,11 +646,11 @@ class OverlayUFOs(BaseWindowController):
     ################
 
     def getContexts(self):
-        if not hasattr(self, 'contextBefore'):
-            self.contextBefore = ''
-        if not hasattr(self, 'contextAfter'):
-            self.contextAfter = ''
-        if not hasattr(self, 'contextCurrent'):
+        if not hasattr(self, "contextBefore"):
+            self.contextBefore = ""
+        if not hasattr(self, "contextAfter"):
+            self.contextAfter = ""
+        if not hasattr(self, "contextCurrent"):
             self.contextCurrent = None
         return self.contextBefore, self.contextCurrent, self.contextAfter
 
@@ -625,10 +668,9 @@ class OverlayUFOs(BaseWindowController):
         self.updateView()
 
     def contextCurrentEditCallback(self, sender):
-        #if sender.get():
-            #sender.set(sender.get()[0])
+        # if sender.get():
+        # sender.set(sender.get()[0])
         self.contextEditCallback(sender)
-
 
 
 if __name__ == "__main__":
