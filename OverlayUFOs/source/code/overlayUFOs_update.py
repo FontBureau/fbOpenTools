@@ -75,9 +75,18 @@ class GlyphEditorSubscriber(Subscriber):
 
     def build(self):
         glyphEditor = self.getGlyphEditor()
-        self.container = glyphEditor.getExtensionContainer(
-            identifier=DEFAULTKEY_CONTAINER, position="background", clear=True
+        self.container = glyphEditor.extensionContainer(
+            identifier=DEFAULTKEY_CONTAINER, location="background", clear=True
         )
+
+        glyphEditorGlyph = glyphEditor.getGlyph()
+        for eachFont in [ff for ff in AllFonts() if ff is not glyphEditorGlyph.font]:
+            glyphLayer = self.container.appendPathSublayer(
+                fillColor=(1, 0, 0, 0.4),
+                strokeColor=(1, 0, 0, 0.8),
+            )
+            glyphPath = eachFont[glyphEditorGlyph.name].getRepresentation("merz.CGPath")
+            glyphLayer.setPath(glyphPath)
 
     def destroy(self):
         self.container.clearSublayers()
@@ -94,7 +103,7 @@ class FontListManager(Subscriber):
     def fontDocumentDidOpen(self, info):
         font = info.get("font")
         if font:
-            self.tool.fonts.append(font)
+            self.fonts.append(font)
             self.controller.refreshCallback()
 
     def fontDocumentWillClose(self, info):
@@ -162,7 +171,7 @@ class OverlayUFOs(WindowController):
         FontListManager.controller = self
         registerRoboFontSubscriber(FontListManager)
 
-    def destroy(self, sender):
+    def destroy(self):
         GlyphEditorSubscriber.controller = None
         unregisterGlyphEditorSubscriber(GlyphEditorSubscriber)
 
@@ -367,7 +376,7 @@ class OverlayUFOs(WindowController):
         for d in self.getSourceFonts():
             if d["status"]:
                 currentSelection.append(d["path"])
-        for status, path, name in self.tool.getFontLabels():
+        for status, path, name in self.fontListManager.getFontLabels():
             if path in currentSelection:
                 status = SELECTED_SYMBOL
             else:
