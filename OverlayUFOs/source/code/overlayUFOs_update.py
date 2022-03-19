@@ -12,11 +12,14 @@ from mojo.roboFont import AllFonts, OpenFont, OpenWindow
 from mojo.subscriber import (
     Subscriber,
     WindowController,
+    registerCurrentGlyphSubscriber,
     registerGlyphEditorSubscriber,
     registerRoboFontSubscriber,
+    unregisterCurrentGlyphSubscriber,
     unregisterGlyphEditorSubscriber,
     unregisterRoboFontSubscriber,
 )
+from mojo.UI import AllGlyphWindows
 from vanilla import (
     Button,
     CheckBox,
@@ -69,6 +72,25 @@ def SmallTextListCell(editable=False):
     return cell
 
 
+class CurrentGlyphSubscriber(Subscriber):
+
+    debug = DEBUG_MODE
+
+    def currentGlyphDidChange(self, info):
+        glyph = info["glyph"]
+        editorGlyphNames = [editor.getGlyph().name for editor in AllGlyphWindows()]
+        if glyph.name in editorGlyphNames:
+            postEvent(f"{DEFAULTKEY}.editorGlyphDidChange", glyph=glyph)
+
+        contextNames = [
+            self.controller.w.leftContext.get(),
+            self.controller.w.currentContext.get(),
+            self.controller.w.rightContext.get(),
+        ]
+        if glyph.name in contextNames:
+            postEvent(f"{DEFAULTKEY}.contextGlyphDidChange", glyph=glyph)
+
+
 class GlyphEditorSubscriber(Subscriber):
 
     debug = DEBUG_MODE
@@ -90,6 +112,16 @@ class GlyphEditorSubscriber(Subscriber):
 
     def destroy(self):
         self.container.clearSublayers()
+    def editorGlyphDidChange(self, info):
+        glyph = info["glyph"]
+        glyphEditorGlyph = self.getGlyphEditor().getGlyph()
+        for eachGlyphLayer in self.container.getSublayers():
+            layerName = eachGlyphLayer.getName()
+            if layerName.startswith(glyphEditorGlyph.name) and layerName.endswith(glyph.font.path):
+                eachGlyphLayer.setPath(glyph.getRepresentation("merz.CGPath"))
+
+    def contextGlyphDidChange(self, info):
+        glyph = info["glyph"]
 
 
 class FontListManager(Subscriber):
@@ -120,8 +152,14 @@ class FontListManager(Subscriber):
         for index, font in enumerate(self.fonts):
             if font.path == path:
                 del self.fonts[index]
+        CurrentGlyphSubscriber.controller = self
+        registerCurrentGlyphSubscriber(CurrentGlyphSubscriber)
+
 
     def getFontLabel(self, path):
+        CurrentGlyphSubscriber.controller = None
+        unregisterCurrentGlyphSubscriber(CurrentGlyphSubscriber)
+
         if path is None:
             return None
         if not path:
