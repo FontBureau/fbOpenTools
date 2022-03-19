@@ -1,9 +1,9 @@
 from pathlib import Path
 
 from AppKit import NSColor, NSFont, NSSmallControlSize, NSTextFieldCell
-from mojo.events import addObserver, removeObserver
+from mojo.events import postEvent
 from mojo.extensions import (
-    getExtensionDefault,
+    NSColorToRgba,
     getExtensionDefaultColor,
     setExtensionDefault,
     setExtensionDefaultColor,
@@ -25,16 +25,15 @@ from vanilla import (
     CheckBox,
     ColorWell,
     EditText,
-    FloatingWindow,
     List,
     RadioGroup,
     TextBox,
+    Window,
 )
 
-DEBUG_MODE = True
-
 # tool keys
-DEFAULTKEY = "com.fontbureau.overlayUFO"
+from customEvents import DEBUG_MODE, DEFAULTKEY
+
 DEFAULTKEY_CONTAINER = f"{DEFAULTKEY}.backgroundContainer"
 DEFAULTKEY_FILLCOLOR = f"{DEFAULTKEY}.fillColor"
 DEFAULTKEY_STROKECOLOR = f"{DEFAULTKEY}.strokeColor"
@@ -100,18 +99,40 @@ class GlyphEditorSubscriber(Subscriber):
         self.container = glyphEditor.extensionContainer(
             identifier=DEFAULTKEY_CONTAINER, location="background", clear=True
         )
-
-        glyphEditorGlyph = glyphEditor.getGlyph()
-        for eachFont in [ff for ff in AllFonts() if ff is not glyphEditorGlyph.font]:
-            glyphLayer = self.container.appendPathSublayer(
-                fillColor=(1, 0, 0, 0.4),
-                strokeColor=(1, 0, 0, 0.8),
-            )
-            glyphPath = eachFont[glyphEditorGlyph.name].getRepresentation("merz.CGPath")
-            glyphLayer.setPath(glyphPath)
+        self._addGlyphLayers()
 
     def destroy(self):
         self.container.clearSublayers()
+
+    def _addGlyphLayers(self):
+        glyphEditorGlyph = self.getGlyphEditor().getGlyph()
+
+        for fontData in self.controller.w.fontList.get():
+
+            # QUESTION: do we need to support unsaved fonts?
+            for eachFont in self.controller.fonts:
+                if eachFont.path == fontData["path"]:
+                    break
+
+            glyphObj = eachFont[glyphEditorGlyph.name]
+            if self.controller.w.align.get() == 0:  # left
+                x = 0
+            elif self.controller.w.align.get() == 1:  # center
+                x = glyphEditorGlyph.width / 2 - glyphObj.width / 2
+            else:  # right
+                x = glyphEditorGlyph.width - glyphObj.width
+
+            glyphLayer = self.container.appendPathSublayer(
+                name=f"{glyphEditorGlyph.name}.{fontData['path']}",
+                fillColor=self.controller.fillColor,
+                strokeColor=self.controller.strokeColor,
+                position=(x, 0),
+            )
+            glyphLayer.setVisible(bool(fontData["status"]))
+
+            glyphPath = glyphObj.getRepresentation("merz.CGPath")
+            glyphLayer.setPath(glyphPath)
+
     def editorGlyphDidChange(self, info):
         glyph = info["glyph"]
         glyphEditorGlyph = self.getGlyphEditor().getGlyph()
@@ -123,43 +144,123 @@ class GlyphEditorSubscriber(Subscriber):
     def contextGlyphDidChange(self, info):
         glyph = info["glyph"]
 
+    def alignmentDidChange(self, info):
+        glyphEditorGlyph = self.getGlyphEditor().getGlyph()
+
+        for fontData in self.controller.w.fontList.get():
+            # QUESTION: do we need to support unsaved fonts?
+            for eachFont in self.controller.fonts:
+                if eachFont.path == fontData["path"]:
+                    break
+
+            glyphObj = eachFont[glyphEditorGlyph.name]
+            if self.controller.w.align.get() == 0:  # left
+                x = 0
+            elif self.controller.w.align.get() == 1:  # center
+                x = self.getGlyphEditor().getGlyph().width / 2 - glyphObj.width / 2
+            else:  # right
+                x = self.getGlyphEditor().getGlyph().width - glyphObj.width
+
+            glyphLayer = self.container.getSublayer(
+                name=f"{glyphEditorGlyph.name}.{fontData['path']}",
+            )
+            glyphLayer.setPosition((x, 0))
+
+    def displayedFontsDidChange(self, info):
+        for fontData in self.controller.w.fontList.get():
+            for eachLayer in self.container.getSublayers():
+                if eachLayer.getName().endswith(fontData["path"]):
+                    eachLayer.setVisible(bool(fontData["status"]))
+
+    def contextDidChange(self, info):
+        pass
+
+    def colorDidChange(self, info):
+        with self.container.propertyGroup():
+            for eachLayer in self.container.getSublayers():
+                eachLayer.setFillColor(self.controller.fillColor)
+                eachLayer.setStrokeColor(self.controller.strokeColor)
+
+    def fillCheckBoxDidChange(self, info):
+        r, g, b, a = self.controller.fillColor
+        a = a if self.controller.w.fill.get() else 0
+        with self.container.propertyGroup():
+            for eachLayer in self.container.getSublayers():
+                eachLayer.setFillColor((r, g, b, a))
+
+    def strokeCheckBoxDidChange(self, info):
+        thickness = 1 if self.controller.w.stroke.get() else 0
+        with self.container.propertyGroup():
+            for eachLayer in self.container.getSublayers():
+                eachLayer.setStrokeWidth(thickness)
+
+    def alwaysCurrentViewDidChange(self, info):
+        pass
+
+    def fontListDidChange(self, info):
+        pass
+
 
 class FontListManager(Subscriber):
     """
-    The tool object manages the font list. This is a simplification.
+    A subscriber following opened/closed fonts notifications
     """
 
     debug = DEBUG_MODE
-    fonts = AllFonts()
 
     def fontDocumentDidOpen(self, info):
         font = info.get("font")
         if font:
-            self.fonts.append(font)
-            self.controller.refreshCallback()
+            self.controller.fonts.append(font)
+            postEvent(f"{DEFAULTKEY}.openedFontsDidChange")
 
     def fontDocumentWillClose(self, info):
         path = info["font"].path
         if path:
             self.removeFromFonts(path)
-            self.controller.refreshCallback()
-
-    def appendToFonts(self, path):
-        f = OpenFont(path, showInterface=False)
-        self.fonts.append(f)
+            postEvent(f"{DEFAULTKEY}.openedFontsDidChange")
 
     def removeFromFonts(self, path):
         for index, font in enumerate(self.fonts):
             if font.path == path:
-                del self.fonts[index]
+                del self.controller.fonts[index]
+
+
+class OverlayUFOs(WindowController):
+
+    debug = DEBUG_MODE
+
+    def build(self):
+        self.fonts = AllFonts()
+        self.w = Window((400, 200), "Overlay UFOs", minSize=(400, 200))
+        self.populateWindow()
+        self.w.open()
+
+    def started(self):
         CurrentGlyphSubscriber.controller = self
         registerCurrentGlyphSubscriber(CurrentGlyphSubscriber)
 
+        GlyphEditorSubscriber.controller = self
+        registerGlyphEditorSubscriber(GlyphEditorSubscriber)
 
-    def getFontLabel(self, path):
+        FontListManager.controller = self
+        registerRoboFontSubscriber(FontListManager)
+
+    def destroy(self):
         CurrentGlyphSubscriber.controller = None
         unregisterCurrentGlyphSubscriber(CurrentGlyphSubscriber)
 
+        GlyphEditorSubscriber.controller = None
+        unregisterGlyphEditorSubscriber(GlyphEditorSubscriber)
+
+        FontListManager.controller = None
+        unregisterRoboFontSubscriber(FontListManager)
+
+        if DEBUG_MODE:
+            for eachFont in AllFonts():
+                eachFont.close()
+
+    def _getFontLabel(self, path):
         if path is None:
             return None
         if not path:
@@ -168,12 +269,12 @@ class FontListManager(Subscriber):
         status = SELECTED_SYMBOL
         return status, path, name
 
-    def getFontLabels(self):
+    def _getFontLabels(self):
         labels = {}
         fontPaths = [f.path or f"{f.info.familyName} {f.info.styleName}" for f in self.fonts]
         for path in fontPaths:
             if path:
-                label = self.getFontLabel(path)
+                label = self._getFontLabel(path)
                 name = label[-1]
             else:
                 name = "Untitled"
@@ -191,48 +292,21 @@ class FontListManager(Subscriber):
                     sortedLabels.append((status, path, f'{name} "{Path(path).parent}"'))
         return sortedLabels
 
-
-class OverlayUFOs(WindowController):
-
-    debug = DEBUG_MODE
-
-    def build(self):
-        self.fontListManager = FontListManager()
-        self.w = FloatingWindow((400, 200), "Overlay UFOs", minSize=(400, 200))
-        self.populateWindow()
-        self.w.open()
-
-    def started(self):
-        GlyphEditorSubscriber.controller = self
-        registerGlyphEditorSubscriber(GlyphEditorSubscriber)
-
-        FontListManager.controller = self
-        registerRoboFontSubscriber(FontListManager)
-
-    def destroy(self):
-        GlyphEditorSubscriber.controller = None
-        unregisterGlyphEditorSubscriber(GlyphEditorSubscriber)
-
-        FontListManager.controller = None
-        unregisterRoboFontSubscriber(FontListManager)
-        self.updateView()
-
-        if DEBUG_MODE:
-            for eachFont in AllFonts():
-                eachFont.close()
-
     def refreshCallback(self, sender=None):
         """
         Update the font list.
         """
-        self.w.fontList.set(self.getFontItems())
+        self.w.fontList.set(self._getFontItems())
+
+    def openedFontsDidChange(self, info):
+        self.refreshCallback()
 
     def resetCallback(self, sender=None):
         """
         Resets the view to the currently opened fonts.
         """
-        self.fontListManager.fonts = AllFonts()
-        self.w.fontList.set(self.getFontItems())
+        self.fonts = AllFonts()
+        self.refreshCallback()
 
     def addCallback(self, sender=None):
         """
@@ -241,15 +315,15 @@ class OverlayUFOs(WindowController):
         f = OpenFont(None, showInterface=False)
         if f is None:
             return
-        self.fontListManager.appendToFonts(f.path)
+        self.fonts.append(f)
         self.refreshCallback()
 
     def populateWindow(self):
         """
         The UI
         """
-        self.fillColor = getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
-        self.strokeColor = getExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR)
+        self.fillColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR))
+        self.strokeColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR))
         self.contextBefore = self.contextAfter = ""
 
         # Populating the view can only happen after the view is attached to the window,
@@ -266,7 +340,7 @@ class OverlayUFOs(WindowController):
 
         self.w.fontList = List(
             (C2, y, 250, -65),
-            self.getFontItems(),
+            self._getFontItems(),
             selectionCallback=self.fontListCallback,
             drawFocusRing=False,
             enableDelete=False,
@@ -274,13 +348,10 @@ class OverlayUFOs(WindowController):
             allowsEmptySelection=True,
             drawHorizontalLines=True,
             showColumnTitles=False,
-            columnDescriptions=self.getPathListDescriptor(),
+            columnDescriptions=self._getPathListDescriptor(),
             rowHeight=16,
         )
-        self.w.viewEnabled = CheckBox(
-            (x, y, BUTTON_WIDTH, 22), "Show", callback=self.viewCallback, sizeStyle=CONTROLS_SIZE_STYLE, value=True
-        )
-        y += L
+
         self.w.fill = CheckBox(
             (x, y, 60, 22),
             "Fill",
@@ -288,10 +359,7 @@ class OverlayUFOs(WindowController):
             value=True,
             callback=self.fillCallback,
         )
-        y += L
-        color = getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
-        self.w.color = ColorWell((x, y, 60, 22), color=color, callback=self.colorCallback)
-        y += L + 5
+        y += L - 3
         self.w.stroke = CheckBox(
             (x, y, 60, 22),
             "Stroke",
@@ -299,8 +367,10 @@ class OverlayUFOs(WindowController):
             value=False,
             callback=self.strokeCallback,
         )
-
-        y += LL
+        y += L
+        color = getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
+        self.w.color = ColorWell((x, y, 60, 22), color=color, callback=self.colorCallback)
+        y += LL + 5
         self.w.alignText = TextBox((x, y, 90, 50), "Alignment", sizeStyle=CONTROLS_SIZE_STYLE)
         y += L
         self.w.align = RadioGroup(
@@ -328,7 +398,7 @@ class OverlayUFOs(WindowController):
             placeholder="Left Context",
         )
         self.w.contextCurrent = EditText(
-            (C2 + 95, -30, 60, 20), callback=self.contextCurrentEditCallback, continuous=True, sizeStyle="small"
+            (C2 + 95, -30, 60, 20), callback=self.contextEditCallback, continuous=True, sizeStyle="small"
         )
         self.w.contextAfter = EditText(
             (C2 + 165, -30, 85, 20),
@@ -337,10 +407,6 @@ class OverlayUFOs(WindowController):
             sizeStyle="small",
             placeholder="Right Context",
         )
-
-    def viewCallback(self, sender):
-        pass
-        # self.updateView()
 
     def fontListCallback(self, sender):
         """If there is a selection, toggle the status of these fonts."""
@@ -356,30 +422,23 @@ class OverlayUFOs(WindowController):
             # Avoid recursive loop because of changing font selection
             sender.setSelection([])
             self._selectionChanging = False
-        self.updateView()
+        postEvent(f"{DEFAULTKEY}.displayedFontsDidChange")
 
-    def getHiddenFont(self, path):
-        for f in self.fontListManager.fonts:
-            if f.path == path:
-                return f
-            elif path == f"{f.info.familyName} {f.info.styleName}":
-                return f
-
-    def getFontItems(self, update=False):
+    def _getFontItems(self, update=False):
         """
         Get all fonts in a way that can be set into a vanilla list.
         """
         itemsByName = {}
         if update:  # if update flag is set, then keep the existing selected fonts
-            for item in self.getSourceFonts():
+            for item in self.w.fontList.get():
                 if item["status"]:
                     itemsByName[item["name"]] = item
         currentStatuses = {}
         if hasattr(self.w, "fontList"):
-            for d in self.getSourceFonts():
+            for d in self.w.fontList.get():
                 currentStatuses[d["path"]] = d["status"]
 
-        for status, path, uniqueName in self.fontListManager.getFontLabels():
+        for status, path, uniqueName in self._getFontLabels():
             if path in currentStatuses:
                 status = currentStatuses[path]
             else:
@@ -392,26 +451,20 @@ class OverlayUFOs(WindowController):
             fontList.append(item)
         return fontList
 
-    def getPathListDescriptor(self):
+    def _getPathListDescriptor(self):
         return [
             dict(title="Status", key="status", cell=SmallTextListCell(editable=False), width=12, editable=False),
             dict(title="Name", key="name", width=300, cell=SmallTextListCell(editable=False), editable=False),
             dict(title="Path", key="path", width=0, editable=False),
         ]
 
-    def getSourceFonts(self):
-        """
-        Get the fonts in the list.
-        """
-        return self.w.fontList.get()
-
-    def setSourceFonts(self):
+    def _setSourceFonts(self):
         """
         Set the font list from the current set of open fonts.
         """
         labels = []
         currentSelection = []
-        for d in self.getSourceFonts():
+        for d in self.w.fontList.get():
             if d["status"]:
                 currentSelection.append(d["path"])
         for status, path, name in self.fontListManager.getFontLabels():
@@ -426,75 +479,36 @@ class OverlayUFOs(WindowController):
         """
         Change the color.
         """
-        selectedColor = sender.get()
-        r = selectedColor.redComponent()
-        g = selectedColor.greenComponent()
-        b = selectedColor.blueComponent()
-        a = 1
-        strokeColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, a)
-        setExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, selectedColor)
+        r, g, b, a = NSColorToRgba(sender.get())
+        strokeColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, 1)
+        setExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, sender.get())
         setExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, strokeColor)
-        self.fillColor = selectedColor
-        self.strokeColor = strokeColor
-        self.updateView()
+        self.fillColor = r, g, b, a
+        self.strokeColor = r, g, b, 1
+        postEvent(f"{DEFAULTKEY}.colorDidChange")
 
     def fillCallback(self, sender):
         """
         Change the fill status.
         """
         setExtensionDefault(DEFAULTKEY_FILL, sender.get())
-        self.updateView()
+        postEvent(f"{DEFAULTKEY}.fillCheckBoxDidChange")
 
     def strokeCallback(self, sender):
         """
         Change the stroke status.
         """
         setExtensionDefault(DEFAULTKEY_STROKE, sender.get())
-        self.updateView()
+        postEvent(f"{DEFAULTKEY}.strokeCheckBoxDidChange")
 
     def alignCallback(self, sender):
         """
         Change the alignment status.
         """
-        self.updateView()
-
-    def getAlignment(self):
-        """
-        Get the alignment as a string.
-        """
-        index = self.w.align.get()
-        int_2_alignment = {0: "left", 1: "center", 2: "right"}
-        return int_2_alignment[index]
-
-    def updateView(self, sender=None):
-        pass
-
-    def fontSelectionChanged(self):
-        self.setSourceFonts()
-
-    def getContexts(self):
-        if not hasattr(self, "contextBefore"):
-            self.contextBefore = ""
-        if not hasattr(self, "contextAfter"):
-            self.contextAfter = ""
-        if not hasattr(self, "contextCurrent"):
-            self.contextCurrent = None
-        return self.contextBefore, self.contextCurrent, self.contextAfter
-
-    def setContexts(self, contextBefore, contextCurrent, contextAfter):
-        self.contextBefore = contextBefore
-        self.contextCurrent = contextCurrent
-        self.contextAfter = contextAfter
+        postEvent(f"{DEFAULTKEY}.alignmentDidChange")
 
     def contextEditCallback(self, sender):
-        before = self.w.contextBefore.get()
-        current = self.w.contextCurrent.get() or None
-        after = self.w.contextAfter.get()
-        self.setContexts(before, current, after)
-        self.updateView()
-
-    def contextCurrentEditCallback(self, sender):
-        self.contextEditCallback(sender)
+        postEvent(f"{DEFAULTKEY}.contextDidChange")
 
 
 if __name__ == "__main__":
