@@ -19,7 +19,7 @@ from mojo.subscriber import (
     unregisterGlyphEditorSubscriber,
     unregisterRoboFontSubscriber,
 )
-from mojo.UI import AllGlyphWindows
+from mojo.UI import AllGlyphWindows, splitText
 from vanilla import (
     Button,
     CheckBox,
@@ -71,23 +71,60 @@ def SmallTextListCell(editable=False):
     return cell
 
 
+class GlyphNamesEditText(EditText):
+
+    """
+    Custom Edit Text
+    adds .getFirstName() method to basic functionality
+
+    """
+
+    _title = None
+
+    def __init__(self, *args, **kwargs):
+        super(GlyphNamesEditText, self).__init__(*args, **kwargs)
+
+    def getFirstName(self, font):
+        """
+        Provide the first glyph name from the splitText() call, otherwise return an empty string
+        """
+        names = splitText(self.get(), font.getCharacterMapping(), groups=font.groups)
+        return names[0] if len(names) > 0 else ""
+
+    @property
+    def title(self):
+        """
+        We need a title value to post the contextDidChange event
+
+        """
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        self._title = value
+
+
 class CurrentGlyphSubscriber(Subscriber):
 
     debug = DEBUG_MODE
 
     def currentGlyphDidChange(self, info):
+        """
+        Post events only for interesting glyph cutting non-useful notifications
+
+        """
         glyph = info["glyph"]
         editorGlyphNames = [editor.getGlyph().name for editor in AllGlyphWindows()]
         if glyph.name in editorGlyphNames:
-            postEvent(f"{DEFAULTKEY}.editorGlyphDidChange", glyph=glyph)
+            postEvent(f"{DEFAULTKEY}.displayedGlyphDidChange", glyph=glyph)
 
         contextNames = [
-            self.controller.w.leftContext.get(),
-            self.controller.w.currentContext.get(),
-            self.controller.w.rightContext.get(),
+            self.controller.w.contextBefore.getFirstName(font=glyph.font),
+            self.controller.w.contextCurrent.getFirstName(font=glyph.font),
+            self.controller.w.contextAfter.getFirstName(font=glyph.font),
         ]
         if glyph.name in contextNames:
-            postEvent(f"{DEFAULTKEY}.contextGlyphDidChange", glyph=glyph)
+            postEvent(f"{DEFAULTKEY}.displayedGlyphDidChange", glyph=glyph)
 
 
 class GlyphEditorSubscriber(Subscriber):
@@ -95,17 +132,57 @@ class GlyphEditorSubscriber(Subscriber):
     debug = DEBUG_MODE
 
     def build(self):
+        """
+        Add merz layers to the container
+
+        """
         glyphEditor = self.getGlyphEditor()
         self.container = glyphEditor.extensionContainer(
             identifier=DEFAULTKEY_CONTAINER, location="background", clear=True
         )
-        self._addGlyphLayers()
+
+        self.contextBeforeLayer = self.container.appendBaseSublayer(name="contextBefore")
+        self.contextCurrentLayer = self.container.appendBaseSublayer(name="contextCurrent")
+        self.contextAfterLayer = self.container.appendBaseSublayer(name="contextAfter")
+
+        self._traverseGlyphLayers(position="contextBefore", onlyAlignment=False)
+        self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=False)
+        self._traverseGlyphLayers(position="contextAfter", onlyAlignment=False)
 
     def destroy(self):
+        """
+        Cleanup!
+
+        """
         self.container.clearSublayers()
 
-    def _addGlyphLayers(self):
+    def glyphEditorDidSetGlyph(self, info):
+        """
+        Catch:
+            - glyph switches in the editor
+            - when becomes first responder
+        So, we rebuild the current glyph
+
+        """
+        glyphObj = info["glyph"]
+        if self._getCurrentGlyphName(font=glyphObj.font) == glyphObj.name:
+            self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=False)
+        self.alignmentDidChange(info=None)
+
+    def _traverseGlyphLayers(self, position, onlyAlignment=True):
+        """
+        Lengthy method that abstracts the heavy lifting of dealing with merz layers in the subscriber.
+        It is able to:
+            - traverse all the merz layers
+            - add glyph paths or adjust x position (when alignment is changed)
+
+        """
+        assert position in {"contextBefore", "contextCurrent", "contextAfter"}
+
         glyphEditorGlyph = self.getGlyphEditor().getGlyph()
+        baseLayer = self.container.getSublayer(name=f"{position}")
+        if not onlyAlignment:
+            baseLayer.clearSublayers()
 
         for fontData in self.controller.w.fontList.get():
 
@@ -114,7 +191,17 @@ class GlyphEditorSubscriber(Subscriber):
                 if eachFont.path == fontData["path"]:
                     break
 
-            glyphObj = eachFont[glyphEditorGlyph.name]
+            if position == "contextCurrent":
+                displayedName = self._getCurrentGlyphName(font=eachFont)
+            else:
+                displayedName = getattr(self.controller.w, position).getFirstName(font=eachFont)
+
+            # we bail out if the glyph name is an empty string
+            # we bail out if there is no available glyph
+            if not displayedName or displayedName not in eachFont:
+                continue
+
+            glyphObj = eachFont[displayedName]
             if self.controller.w.align.get() == 0:  # left
                 x = 0
             elif self.controller.w.align.get() == 1:  # center
@@ -122,88 +209,144 @@ class GlyphEditorSubscriber(Subscriber):
             else:  # right
                 x = glyphEditorGlyph.width - glyphObj.width
 
-            glyphLayer = self.container.appendPathSublayer(
-                name=f"{glyphEditorGlyph.name}.{fontData['path']}",
-                fillColor=self.controller.fillColor,
-                strokeColor=self.controller.strokeColor,
-                position=(x, 0),
-            )
-            glyphLayer.setVisible(bool(fontData["status"]))
+            # adjusting x according to current glyph in the editor
+            if position == "contextAfter":
+                x += glyphEditorGlyph.width
+            elif position == "contextBefore":
+                x -= glyphEditorGlyph.width
 
-            glyphPath = glyphObj.getRepresentation("merz.CGPath")
-            glyphLayer.setPath(glyphPath)
+            # adding
+            if not onlyAlignment:
+                glyphLayer = baseLayer.appendPathSublayer(
+                    name=f"{displayedName}.{fontData['path']}",
+                    fillColor=self.controller.fillColor,
+                    strokeColor=self.controller.strokeColor,
+                    position=(x, 0),
+                )
+                # we don't show invisible fonts or the current glyph in the editor
+                if not bool(fontData["status"]) or glyphObj.asDefcon() is glyphEditorGlyph:
+                    glyphLayer.setVisible(False)
+                glyphPath = glyphObj.getRepresentation("merz.CGPath")
+                glyphLayer.setPath(glyphPath)
+            # adjusting x value
+            else:
+                glyphLayer = baseLayer.getSublayer(
+                    name=f"{displayedName}.{fontData['path']}",
+                )
+                glyphLayer.setPosition((x, 0))
 
-    def editorGlyphDidChange(self, info):
+    def displayedGlyphDidChange(self, info):
+        """
+        Take care of resetting a glyph path if it changed somewhere
+
+        """
         glyph = info["glyph"]
+
+        displayedNames = [
+            self._getCurrentGlyphName(font=glyph.font),
+            getattr(self.controller.w, "contextBefore").getFirstName(font=glyph.font),
+            getattr(self.controller.w, "contextAfter").getFirstName(font=glyph.font),
+        ]
+
+        for eachBaseLayer in self.container.getSublayers():
+            for eachGlyphLayer in eachBaseLayer.getSublayers():
+                layerName = eachGlyphLayer.getName()
+                someName, somePath = layerName.split(".", maxsplit=1)
+                if someName in displayedNames and somePath.endswith(glyph.font.path):
+                    eachGlyphLayer.setPath(glyph.getRepresentation("merz.CGPath"))
+
+    def _getCurrentGlyphName(self, font):
+        """
+        Based on currentContext edit text controller and font cmap
+
+        """
         glyphEditorGlyph = self.getGlyphEditor().getGlyph()
-        for eachGlyphLayer in self.container.getSublayers():
-            layerName = eachGlyphLayer.getName()
-            if layerName.startswith(glyphEditorGlyph.name) and layerName.endswith(glyph.font.path):
-                eachGlyphLayer.setPath(glyph.getRepresentation("merz.CGPath"))
-
-    def contextGlyphDidChange(self, info):
-        glyph = info["glyph"]
+        return (
+            self.controller.w.contextCurrent.getFirstName(font)
+            if self.controller.w.contextCurrent.getFirstName(font)
+            else glyphEditorGlyph.name
+        )
 
     def alignmentDidChange(self, info):
-        glyphEditorGlyph = self.getGlyphEditor().getGlyph()
+        """
+        Used to adjust alignment when user input new value in the radio group or
+        when the user switches to another glyph in the editor
 
-        for fontData in self.controller.w.fontList.get():
-            # QUESTION: do we need to support unsaved fonts?
-            for eachFont in self.controller.fonts:
-                if eachFont.path == fontData["path"]:
-                    break
-
-            glyphObj = eachFont[glyphEditorGlyph.name]
-            if self.controller.w.align.get() == 0:  # left
-                x = 0
-            elif self.controller.w.align.get() == 1:  # center
-                x = self.getGlyphEditor().getGlyph().width / 2 - glyphObj.width / 2
-            else:  # right
-                x = self.getGlyphEditor().getGlyph().width - glyphObj.width
-
-            glyphLayer = self.container.getSublayer(
-                name=f"{glyphEditorGlyph.name}.{fontData['path']}",
-            )
-            glyphLayer.setPosition((x, 0))
+        """
+        self._traverseGlyphLayers(position="contextBefore", onlyAlignment=True)
+        self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=True)
+        self._traverseGlyphLayers(position="contextAfter", onlyAlignment=True)
 
     def displayedFontsDidChange(self, info):
+        """
+        Adjust the merz layers visibility according to parameters from the self.w.fontList
+
+        """
         for fontData in self.controller.w.fontList.get():
             for eachLayer in self.container.getSublayers():
                 if eachLayer.getName().endswith(fontData["path"]):
                     eachLayer.setVisible(bool(fontData["status"]))
 
     def contextDidChange(self, info):
-        pass
+        """
+        Adjust the merz layers based on changes from the context custom edit texts
+
+        """
+        self._traverseGlyphLayers(position=info["position"], onlyAlignment=False)
 
     def colorDidChange(self, info):
+        """
+        Adjust the merz layers according to the color well
+
+        """
         with self.container.propertyGroup():
-            for eachLayer in self.container.getSublayers():
-                eachLayer.setFillColor(self.controller.fillColor)
-                eachLayer.setStrokeColor(self.controller.strokeColor)
+            for eachBaseLayer in self.container.getSublayers():
+                for eachGlyphLayer in eachBaseLayer.getSublayers():
+                    eachGlyphLayer.setFillColor(self.controller.fillColor)
+                    eachGlyphLayer.setStrokeColor(self.controller.strokeColor)
 
     def fillCheckBoxDidChange(self, info):
+        """
+        Adjust the merz layers according to the fill check box
+
+        """
         r, g, b, a = self.controller.fillColor
         a = a if self.controller.w.fill.get() else 0
         with self.container.propertyGroup():
-            for eachLayer in self.container.getSublayers():
-                eachLayer.setFillColor((r, g, b, a))
+            for eachBaseLayer in self.container.getSublayers():
+                for eachGlyphLayer in eachBaseLayer.getSublayers():
+                    eachGlyphLayer.setFillColor((r, g, b, a))
 
     def strokeCheckBoxDidChange(self, info):
+        """
+        Adjust the merz layers according to the stroke check box
+
+        """
         thickness = 1 if self.controller.w.stroke.get() else 0
         with self.container.propertyGroup():
-            for eachLayer in self.container.getSublayers():
-                eachLayer.setStrokeWidth(thickness)
+            for eachBaseLayer in self.container.getSublayers():
+                for eachGlyphLayer in eachBaseLayer.getSublayers():
+                    eachGlyphLayer.setStrokeWidth(thickness)
 
-    def alwaysCurrentViewDidChange(self, info):
-        pass
+    # def alwaysCurrentViewDidChange(self, info):
+    #     pass
 
     def fontListDidChange(self, info):
-        pass
+        """
+        If the font list changes, we rebuild all the layers
+        No need for real speed in this situation, we can go for a safer approach
+        reducing complexity instead of diffing the existing layers
+
+        """
+        self._traverseGlyphLayers(position="contextBefore", onlyAlignment=False)
+        self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=False)
+        self._traverseGlyphLayers(position="contextAfter", onlyAlignment=False)
 
 
 class FontListManager(Subscriber):
     """
     A subscriber following opened/closed fonts notifications
+
     """
 
     debug = DEBUG_MODE
@@ -295,6 +438,7 @@ class OverlayUFOs(WindowController):
     def refreshCallback(self, sender=None):
         """
         Update the font list.
+
         """
         self.w.fontList.set(self._getFontItems())
 
@@ -304,6 +448,7 @@ class OverlayUFOs(WindowController):
     def resetCallback(self, sender=None):
         """
         Resets the view to the currently opened fonts.
+
         """
         self.fonts = AllFonts()
         self.refreshCallback()
@@ -311,6 +456,7 @@ class OverlayUFOs(WindowController):
     def addCallback(self, sender=None):
         """
         Open a font without UI and add it to the font list.
+
         """
         f = OpenFont(None, showInterface=False)
         if f is None:
@@ -321,6 +467,7 @@ class OverlayUFOs(WindowController):
     def populateWindow(self):
         """
         The UI
+
         """
         self.fillColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR))
         self.strokeColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR))
@@ -382,34 +529,45 @@ class OverlayUFOs(WindowController):
         )
         self.w.align.set(0)
 
-        self.w.viewCurrent = CheckBox(
-            (C2, -60, 150, 22),
-            "Always View Current",
-            sizeStyle=CONTROLS_SIZE_STYLE,
-            value=False,
-            callback=self.contextEditCallback,
-        )
+        # self.w.viewCurrent = CheckBox(
+        #     (C2, -60, 150, 22),
+        #     "Always View Current",
+        #     sizeStyle=CONTROLS_SIZE_STYLE,
+        #     value=False,
+        #     callback=self.contextEditCallback,
+        # )
 
-        self.w.contextBefore = EditText(
+        self.w.contextBefore = GlyphNamesEditText(
             (C2, -30, 85, 20),
             callback=self.contextEditCallback,
             continuous=True,
             sizeStyle="small",
             placeholder="Left Context",
         )
-        self.w.contextCurrent = EditText(
-            (C2 + 95, -30, 60, 20), callback=self.contextEditCallback, continuous=True, sizeStyle="small"
+        self.w.contextBefore.title = "contextBefore"
+
+        self.w.contextCurrent = GlyphNamesEditText(
+            (C2 + 95, -30, 60, 20),
+            callback=self.contextEditCallback,
+            continuous=True,
+            sizeStyle="small",
         )
-        self.w.contextAfter = EditText(
+        self.w.contextCurrent.title = "contextCurrent"
+
+        self.w.contextAfter = GlyphNamesEditText(
             (C2 + 165, -30, 85, 20),
             callback=self.contextEditCallback,
             continuous=True,
             sizeStyle="small",
             placeholder="Right Context",
         )
+        self.w.contextAfter.title = "contextAfter"
 
     def fontListCallback(self, sender):
-        """If there is a selection, toggle the status of these fonts."""
+        """
+        If there is a selection, toggle the status of these fonts
+
+        """
         # Avoid recursive loop because of changing font selection
         if not self._selectionChanging:
             for selectedIndex in sender.getSelection():
@@ -426,7 +584,8 @@ class OverlayUFOs(WindowController):
 
     def _getFontItems(self, update=False):
         """
-        Get all fonts in a way that can be set into a vanilla list.
+        Get all fonts in a way that can be set into a vanilla list
+
         """
         itemsByName = {}
         if update:  # if update flag is set, then keep the existing selected fonts
@@ -460,7 +619,8 @@ class OverlayUFOs(WindowController):
 
     def _setSourceFonts(self):
         """
-        Set the font list from the current set of open fonts.
+        Set the font list from the current set of open fonts
+
         """
         labels = []
         currentSelection = []
@@ -477,7 +637,8 @@ class OverlayUFOs(WindowController):
 
     def colorCallback(self, sender):
         """
-        Change the color.
+        Change the color
+
         """
         r, g, b, a = NSColorToRgba(sender.get())
         strokeColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, 1)
@@ -489,26 +650,29 @@ class OverlayUFOs(WindowController):
 
     def fillCallback(self, sender):
         """
-        Change the fill status.
+        Change the fill status
+
         """
         setExtensionDefault(DEFAULTKEY_FILL, sender.get())
         postEvent(f"{DEFAULTKEY}.fillCheckBoxDidChange")
 
     def strokeCallback(self, sender):
         """
-        Change the stroke status.
+        Change the stroke status
+
         """
         setExtensionDefault(DEFAULTKEY_STROKE, sender.get())
         postEvent(f"{DEFAULTKEY}.strokeCheckBoxDidChange")
 
     def alignCallback(self, sender):
         """
-        Change the alignment status.
+        Change the alignment status
+
         """
         postEvent(f"{DEFAULTKEY}.alignmentDidChange")
 
     def contextEditCallback(self, sender):
-        postEvent(f"{DEFAULTKEY}.contextDidChange")
+        postEvent(f"{DEFAULTKEY}.contextDidChange", position=sender.title)
 
 
 if __name__ == "__main__":
