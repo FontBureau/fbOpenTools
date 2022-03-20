@@ -364,12 +364,12 @@ class FontListManager(Subscriber):
             postEvent(f"{DEFAULTKEY}.openedFontsDidChange")
 
     def removeFromFonts(self, path):
-        for index, font in enumerate(self.fonts):
+        for index, font in enumerate(self.controller.fonts):
             if font.path == path:
                 del self.controller.fonts[index]
 
 
-class OverlayUFOs(WindowController):
+class OverlayUFOs(Subscriber, WindowController):
 
     debug = DEBUG_MODE
 
