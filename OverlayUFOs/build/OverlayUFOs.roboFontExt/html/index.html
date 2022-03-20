@@ -1,0 +1,101 @@
+<html>
+<head><title>OverlayUFOs</title></head>
+<body>
+
+<h1>OverlayUFOs</h1>
+
+
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/OverlayUFOs_preview.png" />
+ 
+<p>In the Current Glyph window, this extension will present an overlay of any glyph behind or beside what you are drawing. You can overlay glyphs from the Current Font or from any UFO.</p>
+
+<p>This does NOT import any data into the background layer. Instead, it renders a outline directly from the source UFO into the glyph window view.</p>
+
+<p>I use this to compare different glyphs within a font, look at a glyph across different styles, or to check for consistency within a family.</p>
+
+<ul>
+
+<li>There is no need to import duplicate data into a background layer.</li>
+
+<li>The source outline is always live; when changes are made to the source, they will automatically appear in the current without re-importing.</li>
+
+<li>You can add source fonts that are not open in the Robofont UI.</li>
+
+
+<h2>Dialog</h2>
+
+</ul>
+    
+<p>A floating dialog is present to let you select and open source fonts, specify which glyph(s) to display, and select view options such as fill, stroke, color.</p>
+
+<h3>Font selection</h3>
+
+<ul>
+
+<li><strong>Selecting Source Fonts</strong>: By default, the font list contains all currently opened fonts. Click on an individual font in the list to toggle its visibility in the overlay.</li>
+
+<li><strong>Adding Other Fonts</strong>: You can manually add fonts by pressing the "+" button and selecting a UFO file. To save time and reduce clutter, the UFO will open without a Robofont interface.</li>
+
+<li><strong>Reset Font List</strong>: The reset button will return the font selection to the default of all open fonts.</li>
+
+
+</ul>
+
+<h3>Glyph selection</h3>
+
+<ul>
+
+<li><strong>Overlay</strong>: By default, the extension will overlay all glyphs with the same name as the Current Glyph. If you wish to change this, type any single character or glyph name preceded by a slash in the center text field (just as you would type it in Space Center).</li>
+
+<li><strong>Contexts</strong>: Using the Left Context and Right Context fields, you can also make glyphs appear on either side of your Current Glyph. These fields will accept one or more characters or glyph names preceded by a slash (just as you would type it in Space Center). Note: the spacing of the contexts currently does not account for kerning.<br /><br /></li>
+
+</ul>
+
+<p>An screenshot showing contexts in use:</p>
+
+<img src="https://github.com/FontBureau/fbOpenTools/raw/master/OverlayUFOs/OverlayUFOs_preview.02.png" />
+
+
+
+<h3>Other View Options</h3>
+
+<ul>
+
+<li><strong>Show</strong>: A quick way to enable/disable all overlays without closing the extension.</li>
+
+<li><strong>Always View Current</strong>: When this option is checked, the extension will always overlay the Current Font, regardless of whether it is selected in the font list. This is useful if you switch fonts often, and always want to see contexts from the font you are editing.</li>
+
+<li><strong>Fill</strong>: Overlay glyphs filled with the selected color.</li>
+
+<li><strong>Stroke</strong>: Overlay glyphs showing only their outlines in the selected color.</li>
+
+<li><strong>Alignment</strong>: Choose how the overlays are aligned to the Current Glyph.</li>
+
+</ul>
+
+
+
+<h2>Bugs/Improvements</h2>
+
+<p>Set different colors, fill settings for each font?</p>
+
+<p>Add options to scale the source font.</p>
+
+<p>Make contexts aware of kerning.</p>
+
+<p>Add option to update contexts based on the case of the current glyph, or set case-sensitive control characters.</p>
+
+
+<h2>MIT License</h2>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+
+
+</body>
+
+</html>
