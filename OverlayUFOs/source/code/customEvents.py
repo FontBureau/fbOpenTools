@@ -1,6 +1,6 @@
 from mojo.subscriber import getRegisteredSubscriberEvents, registerSubscriberEvent
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 DEFAULTKEY = "com.fontbureau.overlayUFO"
 
 
