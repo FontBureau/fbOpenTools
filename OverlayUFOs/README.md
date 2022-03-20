@@ -66,4 +66,4 @@
 
 
 
-<p>This is released under the MIT license. See the the html file inside the extension for more information. Created by David Jonathan Ross and Petr van Blokland.</p>
+<p>This is released under the MIT license. See the the html file inside the extension for more information. Created by David Jonathan Ross and Petr van Blokland. Complete rewrite for RoboFont 4 by Roberto Arista</p>

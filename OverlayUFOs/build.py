@@ -2,7 +2,6 @@
 
 import os
 
-from AppKit import NSAlternateKeyMask, NSCommandKeyMask, NSShiftKeyMask
 from mojo.extensions import ExtensionBundle
 
 # get current folder
@@ -35,10 +34,10 @@ extensionPath = os.path.join(buildPath, extensionFile)
 B = ExtensionBundle()
 
 # name of the extension
-B.name = "OverlayUFOs"
+B.name = "Overlay UFOs"
 
 # name of the developer
-B.developer = "Cyrus Highsmith"
+B.developer = "David Jonathan Ross, Petr van Blokland, Roberto Arista"
 
 # URL of the developer
 B.developerURL = "http://github.com/roboDocs"
@@ -51,10 +50,10 @@ B.icon = imagePath
 B.version = "2.0.0"
 
 # should the extension be launched at start-up?
-B.launchAtStartUp = False
+B.launchAtStartUp = True
 
 # script to be executed when RF starts
-B.mainScript = "OverlayUFOs.py"
+B.mainScript = "customEvents.py"
 
 # does the extension contain html help files?
 B.html = True
@@ -67,8 +66,8 @@ B.requiresVersionMinor = "2"
 B.addToMenu = [
     {
         "path": "OverlayUFOs.py",
-        "preferredName": "OverlayUFOs",
-        # "shortKey": (NSCommandKeyMask | NSShiftKeyMask, "b"),
+        "preferredName": "Overlay UFOs",
+        "shortKey": "",
     }
 ]
 
