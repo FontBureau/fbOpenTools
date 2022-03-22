@@ -210,7 +210,7 @@ class GlyphEditorSubscriber(Subscriber):
             elif position == "contextBefore":
                 x -= glyphEditorGlyph.width
 
-            # adding
+            # adding a new layer
             if not onlyAlignment:
                 glyphLayer = baseLayer.appendPathSublayer(
                     name=f"{displayedName}.{fontData['path']}",
@@ -218,17 +218,26 @@ class GlyphEditorSubscriber(Subscriber):
                     strokeColor=self.controller.strokeColor,
                     position=(x, 0),
                 )
-                # we don't show invisible fonts or the current glyph in the editor
-                if not bool(fontData["status"]) or glyphObj.asDefcon() is glyphEditorGlyph:
-                    glyphLayer.setVisible(False)
                 glyphPath = glyphObj.getRepresentation("merz.CGPath")
                 glyphLayer.setPath(glyphPath)
-            # adjusting x value
+            # adjusting the x value
             else:
                 glyphLayer = baseLayer.getSublayer(
                     name=f"{displayedName}.{fontData['path']}",
                 )
                 glyphLayer.setPosition((x, 0))
+
+            # fix visibility according to viewCurrent checkbox and current glyph in editor
+            # we don't show invisible fonts or the current glyph in the editor
+            # the viewCurrent might override the status from the fontList
+            onlyCurrentView = self.controller.w.viewCurrent.get()
+            if glyphObj.asDefcon() is glyphEditorGlyph:
+                visibility = False
+            elif onlyCurrentView:
+                visibility = glyphEditorGlyph.font is glyphObj.font.asDefcon()
+            else:
+                visibility = bool(fontData["status"])
+            glyphLayer.setVisible(visibility)
 
     def displayedGlyphDidChange(self, info):
         """
@@ -271,6 +280,15 @@ class GlyphEditorSubscriber(Subscriber):
         self._traverseGlyphLayers(position="contextBefore", onlyAlignment=True)
         self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=True)
         self._traverseGlyphLayers(position="contextAfter", onlyAlignment=True)
+
+    def alwaysCurrentViewDidChange(self, info):
+        """
+        When currentView changes we only need to traverse all the merz layers
+        at the end of the method are checked the criteria for visibility for each layer
+        the convenience layer for this is alignmentDidChange 🤷‍♂️
+
+        """
+        self.alignmentDidChange(info=None)
 
     def displayedFontsDidChange(self, info):
         """
@@ -322,10 +340,6 @@ class GlyphEditorSubscriber(Subscriber):
             for eachBaseLayer in self.container.getSublayers():
                 for eachGlyphLayer in eachBaseLayer.getSublayers():
                     eachGlyphLayer.setStrokeWidth(thickness)
-
-    def alwaysCurrentViewDidChange(self, info):
-        self.controller.alwaysCurrentView
-        pass
 
     def fontListDidChange(self, info):
         """
