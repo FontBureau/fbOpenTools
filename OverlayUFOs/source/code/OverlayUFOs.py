@@ -328,8 +328,9 @@ class GlyphEditorSubscriber(Subscriber):
                 for eachGlyphLayer in eachBaseLayer.getSublayers():
                     eachGlyphLayer.setStrokeWidth(thickness)
 
-    # def alwaysCurrentViewDidChange(self, info):
-    #     pass
+    def alwaysCurrentViewDidChange(self, info):
+        self.controller.alwaysCurrentView
+        pass
 
     def fontListDidChange(self, info):
         """
@@ -522,13 +523,13 @@ class OverlayUFOs(Subscriber, WindowController):
         )
         self.w.align.set(0)
 
-        # self.w.viewCurrent = CheckBox(
-        #     (C2, -60, 150, 22),
-        #     "Always View Current",
-        #     sizeStyle=CONTROLS_SIZE_STYLE,
-        #     value=False,
-        #     callback=self.contextEditCallback,
-        # )
+        self.w.viewCurrent = CheckBox(
+            (C2, -60, 150, 22),
+            "Always View Current",
+            sizeStyle=CONTROLS_SIZE_STYLE,
+            value=False,
+            callback=self.viewCurrentCallback,
+        )
 
         self.w.contextBefore = GlyphNamesEditText(
             (C2, -30, 85, 20),
@@ -555,6 +556,9 @@ class OverlayUFOs(Subscriber, WindowController):
             placeholder="Right Context",
         )
         self.w.contextAfter.title = "contextAfter"
+
+    def viewCurrentCallback(self, sender):
+        postEvent(f"{DEFAULTKEY}.alwaysCurrentViewDidChange")
 
     def fontListCallback(self, sender):
         """
