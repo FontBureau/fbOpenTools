@@ -2,12 +2,7 @@ from pathlib import Path
 
 from AppKit import NSColor, NSFont, NSSmallControlSize, NSTextFieldCell
 from mojo.events import postEvent
-from mojo.extensions import (
-    NSColorToRgba,
-    getExtensionDefaultColor,
-    setExtensionDefault,
-    setExtensionDefaultColor,
-)
+from mojo.extensions import NSColorToRgba, getExtensionDefault, setExtensionDefault
 from mojo.roboFont import AllFonts, OpenFont, OpenWindow
 from mojo.subscriber import (
     Subscriber,
@@ -39,8 +34,8 @@ DEFAULTKEY_FILLCOLOR = f"{DEFAULTKEY}.fillColor"
 DEFAULTKEY_STROKECOLOR = f"{DEFAULTKEY}.strokeColor"
 DEFAULTKEY_STROKE = f"{DEFAULTKEY}.stroke"
 DEFAULTKEY_FILL = f"{DEFAULTKEY}.fill"
-FALLBACK_FILLCOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.1)
-FALLBACK_STROKECOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.5)
+FALLBACK_FILLCOLOR = (0.5, 0, 0.5, 0.1)
+FALLBACK_STROKECOLOR = (0.5, 0, 0.5, 0.5)
 
 # Fixed width of the window
 VIEW_MIN_SIZE = 400
@@ -463,8 +458,8 @@ class OverlayUFOs(Subscriber, WindowController):
         The UI
 
         """
-        self.fillColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR))
-        self.strokeColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR))
+        self.fillColor = getExtensionDefault(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
+        self.strokeColor = getExtensionDefault(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR)
         self.contextBefore = self.contextAfter = ""
 
         # Populating the view can only happen after the view is attached to the window,
@@ -509,8 +504,12 @@ class OverlayUFOs(Subscriber, WindowController):
             callback=self.strokeCallback,
         )
         y += L
-        color = getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
-        self.w.color = ColorWell((x, y, 60, 22), color=color, callback=self.colorCallback)
+        defaultColor = getExtensionDefault(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
+        self.w.color = ColorWell(
+            (x, y, 60, 22),
+            color=NSColor.colorWithCalibratedRed_green_blue_alpha_(*defaultColor),
+            callback=self.colorCallback,
+        )
         y += LL + 5
         self.w.alignText = TextBox((x, y, 90, 50), "Alignment", sizeStyle=CONTROLS_SIZE_STYLE)
         y += L
@@ -638,11 +637,10 @@ class OverlayUFOs(Subscriber, WindowController):
 
         """
         r, g, b, a = NSColorToRgba(sender.get())
-        strokeColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, 1)
-        setExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, sender.get())
-        setExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, strokeColor)
         self.fillColor = r, g, b, a
         self.strokeColor = r, g, b, 1
+        setExtensionDefault(DEFAULTKEY_FILLCOLOR, (r, g, b, a))
+        setExtensionDefault(DEFAULTKEY_STROKECOLOR, self.strokeColor)
         postEvent(f"{DEFAULTKEY}.colorDidChange")
 
     def fillCallback(self, sender):
