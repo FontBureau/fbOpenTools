@@ -25,10 +25,10 @@ from vanilla import (
     CheckBox,
     ColorWell,
     EditText,
+    FloatingWindow,
     List,
     RadioGroup,
     TextBox,
-    Window,
 )
 
 # tool keys
