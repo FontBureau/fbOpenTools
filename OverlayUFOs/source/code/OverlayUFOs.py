@@ -375,7 +375,7 @@ class OverlayUFOs(Subscriber, WindowController):
 
     def build(self):
         self.fonts = AllFonts()
-        self.w = Window((400, 200), "Overlay UFOs", minSize=(400, 200))
+        self.w = FloatingWindow((400, 200), "Overlay UFOs", minSize=(400, 200))
         self.populateWindow()
         self.w.open()
 
