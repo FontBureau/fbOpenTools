@@ -435,15 +435,8 @@ class OverlayUFOs(Subscriber, WindowController):
                     sortedLabels.append((status, path, f'{name} "{Path(path).parent}"'))
         return sortedLabels
 
-    def refreshCallback(self, sender=None):
-        """
-        Update the font list.
-
-        """
-        self.w.fontList.set(self._getFontItems())
-
     def openedFontsDidChange(self, info):
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def resetCallback(self, sender=None):
         """
@@ -451,7 +444,7 @@ class OverlayUFOs(Subscriber, WindowController):
 
         """
         self.fonts = AllFonts()
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def addCallback(self, sender=None):
         """
@@ -462,7 +455,7 @@ class OverlayUFOs(Subscriber, WindowController):
         if f is None:
             return
         self.fonts.append(f)
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def populateWindow(self):
         """
