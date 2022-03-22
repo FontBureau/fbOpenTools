@@ -2,12 +2,7 @@ from pathlib import Path
 
 from AppKit import NSColor, NSFont, NSSmallControlSize, NSTextFieldCell
 from mojo.events import postEvent
-from mojo.extensions import (
-    NSColorToRgba,
-    getExtensionDefaultColor,
-    setExtensionDefault,
-    setExtensionDefaultColor,
-)
+from mojo.extensions import NSColorToRgba, getExtensionDefault, setExtensionDefault
 from mojo.roboFont import AllFonts, OpenFont, OpenWindow
 from mojo.subscriber import (
     Subscriber,
@@ -25,10 +20,10 @@ from vanilla import (
     CheckBox,
     ColorWell,
     EditText,
+    FloatingWindow,
     List,
     RadioGroup,
     TextBox,
-    Window,
 )
 
 # tool keys
@@ -39,8 +34,8 @@ DEFAULTKEY_FILLCOLOR = f"{DEFAULTKEY}.fillColor"
 DEFAULTKEY_STROKECOLOR = f"{DEFAULTKEY}.strokeColor"
 DEFAULTKEY_STROKE = f"{DEFAULTKEY}.stroke"
 DEFAULTKEY_FILL = f"{DEFAULTKEY}.fill"
-FALLBACK_FILLCOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.1)
-FALLBACK_STROKECOLOR = NSColor.colorWithCalibratedRed_green_blue_alpha_(0.5, 0, 0.5, 0.5)
+FALLBACK_FILLCOLOR = (0.5, 0, 0.5, 0.1)
+FALLBACK_STROKECOLOR = (0.5, 0, 0.5, 0.5)
 
 # Fixed width of the window
 VIEW_MIN_SIZE = 400
@@ -215,7 +210,7 @@ class GlyphEditorSubscriber(Subscriber):
             elif position == "contextBefore":
                 x -= glyphEditorGlyph.width
 
-            # adding
+            # adding a new layer
             if not onlyAlignment:
                 glyphLayer = baseLayer.appendPathSublayer(
                     name=f"{displayedName}.{fontData['path']}",
@@ -223,17 +218,26 @@ class GlyphEditorSubscriber(Subscriber):
                     strokeColor=self.controller.strokeColor,
                     position=(x, 0),
                 )
-                # we don't show invisible fonts or the current glyph in the editor
-                if not bool(fontData["status"]) or glyphObj.asDefcon() is glyphEditorGlyph:
-                    glyphLayer.setVisible(False)
                 glyphPath = glyphObj.getRepresentation("merz.CGPath")
                 glyphLayer.setPath(glyphPath)
-            # adjusting x value
+            # adjusting the x value
             else:
                 glyphLayer = baseLayer.getSublayer(
                     name=f"{displayedName}.{fontData['path']}",
                 )
                 glyphLayer.setPosition((x, 0))
+
+            # fix visibility according to viewCurrent checkbox and current glyph in editor
+            # we don't show invisible fonts or the current glyph in the editor
+            # the viewCurrent might override the status from the fontList
+            onlyCurrentView = self.controller.w.viewCurrent.get()
+            if glyphObj.asDefcon() is glyphEditorGlyph:
+                visibility = False
+            elif onlyCurrentView:
+                visibility = glyphEditorGlyph.font is glyphObj.font.asDefcon()
+            else:
+                visibility = bool(fontData["status"])
+            glyphLayer.setVisible(visibility)
 
     def displayedGlyphDidChange(self, info):
         """
@@ -276,6 +280,15 @@ class GlyphEditorSubscriber(Subscriber):
         self._traverseGlyphLayers(position="contextBefore", onlyAlignment=True)
         self._traverseGlyphLayers(position="contextCurrent", onlyAlignment=True)
         self._traverseGlyphLayers(position="contextAfter", onlyAlignment=True)
+
+    def alwaysCurrentViewDidChange(self, info):
+        """
+        When currentView changes we only need to traverse all the merz layers
+        at the end of the method are checked the criteria for visibility for each layer
+        the convenience layer for this is alignmentDidChange 🤷‍♂️
+
+        """
+        self.alignmentDidChange(info=None)
 
     def displayedFontsDidChange(self, info):
         """
@@ -328,9 +341,6 @@ class GlyphEditorSubscriber(Subscriber):
                 for eachGlyphLayer in eachBaseLayer.getSublayers():
                     eachGlyphLayer.setStrokeWidth(thickness)
 
-    # def alwaysCurrentViewDidChange(self, info):
-    #     pass
-
     def fontListDidChange(self, info):
         """
         If the font list changes, we rebuild all the layers
@@ -375,7 +385,7 @@ class OverlayUFOs(Subscriber, WindowController):
 
     def build(self):
         self.fonts = AllFonts()
-        self.w = Window((400, 200), "Overlay UFOs", minSize=(400, 200))
+        self.w = FloatingWindow((400, 200), "Overlay UFOs", minSize=(400, 200))
         self.populateWindow()
         self.w.open()
 
@@ -435,15 +445,8 @@ class OverlayUFOs(Subscriber, WindowController):
                     sortedLabels.append((status, path, f'{name} "{Path(path).parent}"'))
         return sortedLabels
 
-    def refreshCallback(self, sender=None):
-        """
-        Update the font list.
-
-        """
-        self.w.fontList.set(self._getFontItems())
-
     def openedFontsDidChange(self, info):
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def resetCallback(self, sender=None):
         """
@@ -451,7 +454,7 @@ class OverlayUFOs(Subscriber, WindowController):
 
         """
         self.fonts = AllFonts()
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def addCallback(self, sender=None):
         """
@@ -462,15 +465,15 @@ class OverlayUFOs(Subscriber, WindowController):
         if f is None:
             return
         self.fonts.append(f)
-        self.refreshCallback()
+        self.w.fontList.set(self._getFontItems())
 
     def populateWindow(self):
         """
         The UI
 
         """
-        self.fillColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR))
-        self.strokeColor = NSColorToRgba(getExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR))
+        self.fillColor = getExtensionDefault(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
+        self.strokeColor = getExtensionDefault(DEFAULTKEY_STROKECOLOR, FALLBACK_STROKECOLOR)
         self.contextBefore = self.contextAfter = ""
 
         # Populating the view can only happen after the view is attached to the window,
@@ -515,8 +518,12 @@ class OverlayUFOs(Subscriber, WindowController):
             callback=self.strokeCallback,
         )
         y += L
-        color = getExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
-        self.w.color = ColorWell((x, y, 60, 22), color=color, callback=self.colorCallback)
+        defaultColor = getExtensionDefault(DEFAULTKEY_FILLCOLOR, FALLBACK_FILLCOLOR)
+        self.w.color = ColorWell(
+            (x, y, 60, 22),
+            color=NSColor.colorWithCalibratedRed_green_blue_alpha_(*defaultColor),
+            callback=self.colorCallback,
+        )
         y += LL + 5
         self.w.alignText = TextBox((x, y, 90, 50), "Alignment", sizeStyle=CONTROLS_SIZE_STYLE)
         y += L
@@ -529,13 +536,13 @@ class OverlayUFOs(Subscriber, WindowController):
         )
         self.w.align.set(0)
 
-        # self.w.viewCurrent = CheckBox(
-        #     (C2, -60, 150, 22),
-        #     "Always View Current",
-        #     sizeStyle=CONTROLS_SIZE_STYLE,
-        #     value=False,
-        #     callback=self.contextEditCallback,
-        # )
+        self.w.viewCurrent = CheckBox(
+            (C2, -60, 150, 22),
+            "Always View Current",
+            sizeStyle=CONTROLS_SIZE_STYLE,
+            value=False,
+            callback=self.viewCurrentCallback,
+        )
 
         self.w.contextBefore = GlyphNamesEditText(
             (C2, -30, 85, 20),
@@ -562,6 +569,9 @@ class OverlayUFOs(Subscriber, WindowController):
             placeholder="Right Context",
         )
         self.w.contextAfter.title = "contextAfter"
+
+    def viewCurrentCallback(self, sender):
+        postEvent(f"{DEFAULTKEY}.alwaysCurrentViewDidChange")
 
     def fontListCallback(self, sender):
         """
@@ -641,11 +651,10 @@ class OverlayUFOs(Subscriber, WindowController):
 
         """
         r, g, b, a = NSColorToRgba(sender.get())
-        strokeColor = NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, 1)
-        setExtensionDefaultColor(DEFAULTKEY_FILLCOLOR, sender.get())
-        setExtensionDefaultColor(DEFAULTKEY_STROKECOLOR, strokeColor)
         self.fillColor = r, g, b, a
         self.strokeColor = r, g, b, 1
+        setExtensionDefault(DEFAULTKEY_FILLCOLOR, (r, g, b, a))
+        setExtensionDefault(DEFAULTKEY_STROKECOLOR, self.strokeColor)
         postEvent(f"{DEFAULTKEY}.colorDidChange")
 
     def fillCallback(self, sender):
