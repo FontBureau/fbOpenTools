@@ -152,9 +152,9 @@ class SelectGlyphSearch(BaseWindowController):
         # get the current font and selection
         f = self.getFont()
         if not f:
-            print "Open a font."
+            print("Open a font.")
             return
-        self.setExistingSelection(f.selection[:])
+        self.setExistingSelection(f.selectedGlyphNames[:])
         # make tabs
         tabList = ['Name', 'Basename', 'Suffix', 'Unicode', 'Category']
         self.w.tabs = Tabs((10, 10, -10, -10), tabList, sizeStyle="small")
@@ -165,7 +165,7 @@ class SelectGlyphSearch(BaseWindowController):
             else:
                 self.w.tabs[i].searchBox = ComboBox((10, 10, -50, 22), self.getUnicodeCategoriesList(), callback=self.searchBoxCallback)
             # refresh button
-            self.w.tabs[i].refresh = Button((-40, 10, 30, 22), unichr(8634), callback=self.refreshCallback)
+            self.w.tabs[i].refresh = Button((-40, 10, 30, 22), chr(8634), callback=self.refreshCallback)
             # glyph list
             self.w.tabs[i].glyphList = List((10, 40, -10, -115), [])
             #self.w.tabs[i].spinner = ProgressSpinner((-33, 5, 32, 32), displayWhenStopped=False, sizeStyle="small")
@@ -185,7 +185,7 @@ class SelectGlyphSearch(BaseWindowController):
                                         isVertical=False, sizeStyle="small")
         self.w.applySelectionRadio.set(0)
         #10169
-        self.w.printButton = Button((-50, y-3, 30, 22), unichr(9998), callback=self.printCallback, sizeStyle="small")
+        self.w.printButton = Button((-50, y-3, 30, 22), chr(9998), callback=self.printCallback, sizeStyle="small")
         self.setUpBaseWindowBehavior()
         self.w.open()
 
@@ -269,7 +269,7 @@ class SelectGlyphSearch(BaseWindowController):
         self.doSearch(self.w.tabs[i].searchBox.get())
     
     def printCallback(self, sender):
-        print self.getNewSelection()
+        print(self.getNewSelection())
     
     ###############
     ## DO SEARCH ##
@@ -386,7 +386,7 @@ class SelectGlyphSearch(BaseWindowController):
         elif i == 4:    # unicode category
             searchResults = self.doSearchInUnicodeCategory(searchTerm, glyphOrder, unicodeData)
         else:
-            print 'tab error', i
+            print('tab error', i)
         # set the search results
         self.w.tabs[i].glyphList.set(searchResults)
         # select all by default
@@ -412,8 +412,8 @@ class SelectGlyphSearch(BaseWindowController):
             fontSet = set(f.keys())
             selectionSet = set(self.getExistingSelection())
             resultSet = fontSet.intersection(selectionSet)
-            f.selection = list(resultSet)
-            f.update()
+            f.selectedGlyphNames = list(resultSet)
+            f.changed()
     
     def addToSelection(self, sender):
         existingSet = set(self.getExistingSelection())

@@ -42,7 +42,6 @@ class ShowMouseCoordinatesTextBox(TextBox):
 
     def mouseDragged(self, info):
         point = info["point"]
-        positionSymbol = unichr(8982)
         deltaPoint = info["delta"]
         angle = math.degrees(math.atan2(deltaPoint.y, deltaPoint.x))
         distance = math.hypot(deltaPoint.x, deltaPoint.y)

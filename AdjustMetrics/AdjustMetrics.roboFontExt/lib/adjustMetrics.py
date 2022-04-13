@@ -316,9 +316,9 @@ class AdjustMetrics(BaseWindowController):
         for f in fonts:
 
             if self.w.glyphSelection.get() == 0:
-                gnames = CurrentFont().selection
+                gnames = CurrentFont().selectedGlyphNames
             else:
-                gnames = f._object.keys()
+                gnames = f.keys()
 
 
             if self.w.adjustBaseComponents.get():
