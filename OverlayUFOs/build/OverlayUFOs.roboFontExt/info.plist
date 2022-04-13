@@ -14,27 +14,24 @@
 		</dict>
 	</array>
 	<key>developer</key>
-	<string>David Jonathan Ross</string>
+	<string>David Jonathan Ross, Petr van Blokland, Roberto Arista</string>
 	<key>developerURL</key>
-	<string>http://www.fontbureau.com</string>
+	<string>http://github.com/roboDocs</string>
 	<key>html</key>
 	<true/>
 	<key>launchAtStartUp</key>
-	<integer>0</integer>
+	<true/>
 	<key>mainScript</key>
-	<string></string>
+	<string>customEvents.py</string>
 	<key>name</key>
 	<string>Overlay UFOs</string>
+	<key>requiresVersionMajor</key>
+	<string>4</string>
+	<key>requiresVersionMinor</key>
+	<string>2</string>
 	<key>timeStamp</key>
-	<real>1384253504.0</real>
+	<real>1647951280.9458449</real>
 	<key>version</key>
-	<string>1.1</string>
-	<key>com.robofontmechanic.Mechanic</key>
-	<dict>
-		<key>repository</key>
-		<string>FontBureau/fbOpenTools</string>
-		<key>summary</key>
-		<string>View an overlay of any glyphs from any font behind or beside what you are drawing.</string>
-	</dict>
+	<string>2.0.1</string>
 </dict>
 </plist>
