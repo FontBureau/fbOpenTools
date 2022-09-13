@@ -1,50 +1,50 @@
-#coding=utf-8
 """
 SHOW CHARACTER INFO
 
 """
 
-from vanilla import *
+from vanilla import TextBox
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.events import addObserver, removeObserver
-from mojo.UI import CurrentGlyphWindow
 import unicodedata
 try:
     from lib.tools.agl import AGL2UV
-except:
+except ImportError:
     from fontTools.agl import AGL2UV
 import json
 import os
+from lib.tools.defaults import getDefaultColor
 
 nameMap = {
-        'ALT': 'Alternate',
-        'SALT': 'Stylistic Alternate',
-        'CALT': 'Contextual Alternate',
-        'SC': 'Small Cap',
-        'SMCP': 'Small Cap',
-        'SUPS': 'Superior',
-        'SINF': 'Inferior',
-        'NUMR': 'Numerator',
-        'DNOM': 'Denominator',
-        }
+    'ALT': 'Alternate',
+    'SALT': 'Stylistic Alternate',
+    'CALT': 'Contextual Alternate',
+    'SC': 'Small Cap',
+    'SMCP': 'Small Cap',
+    'SUPS': 'Superior',
+    'SINF': 'Inferior',
+    'NUMR': 'Numerator',
+    'DNOM': 'Denominator',
+}
 
 BIGUNI = None
 
 class TX:
     @classmethod
     def hex2dec(cls, s):
-            try:
-                return int(s, 16)
-            except:
-                pass
+        try:
+            return int(s, 16)
+        except Exception:
+            pass
+
     @classmethod
     def dec2hex(cls, n, uni = 1):
-            hex = "%X" % n
-            if uni == 1:
-                while len(hex) <= 3:
-                    hex = '0' + str(hex)
-            return hex
-            
+        hex = "%X" % n
+        if uni == 1:
+            while len(hex) <= 3:
+                hex = '0' + str(hex)
+        return hex
+
     @classmethod
     def splitFourDigitUnicodeSequence(cls, l):
         u"""
@@ -62,14 +62,15 @@ class TX:
         0xFFFF}, then interpret each such number as a Unicode scalar value and map the component to the string made of
         those scalar values. Note that the range and digit length restrictions mean that the "uni" prefix can be used
         only with Unicode values from the Basic Multilingual Plane (BMP).</blockquote>
-        
+
         <blockquote>Otherwise, if the component is of the form "u" (U+0075) followed by a sequence of four to six
         uppercase hexadecimal digits {0 .. 9, A .. F} (U+0030 .. U+0039, U+0041 .. U+0046), and those digits represent a
         number in {0x0000 .. 0xD7FF, 0xE000 .. 0x10FFFF}, then interpret this number as a Unicode scalar value and map
         the component to the string made of this scalar value.</blockquote></doc>
         """
         unicodeList = None
-        if VERBOSE: print('isUnicodeName, %s' % name)
+        if VERBOSE:
+            print('isUnicodeName, %s' % name)
         if len(name) > 3 and name[:3] == 'uni':
             unicodeSequence = name[3:]
             if len(unicodeSequence) / 4 == int(len(unicodeSequence) / 4):
@@ -89,7 +90,7 @@ class TX:
             for u in unicodeList:
                 try:
                     decUnicodeList.append(TX.hex2dec(u))
-                except:
+                except Exception:
                     decUnicodeList.append(u)
             return decUnicodeList
         else:
@@ -111,20 +112,20 @@ def getCharName(char, dec=None, BIGUNI=BIGUNI):
         dec = ord(char)
     try:
         return unicodedata.name(char)
-    except:
+    except Exception:
         if not BIGUNI:
             bigUniFile = open(os.path.join(os.path.split(__file__)[0], 'bigUni.json'))
             BIGUNI = json.loads(bigUniFile.read())
         return BIGUNI.get(str(dec))
-        
+
 def getChar(dec):
     try:
         return chr(dec)
-    except:
+    except Exception:
         try:
             hexVersion = TX.dec2hex(dec)
             return (r'\U' + hexVersion.zfill(8)).decode('unicode-escape')
-        except:
+        except Exception:
             return ''
 
 def getGlyphInfo(g):
@@ -199,7 +200,7 @@ def getGlyphInfo(g):
         uniValueSeparator = u'+'
     else:
         uniValueSeparator = u' '
-        
+
     displayElements = []
     if unicodeValueElements:
         displayElements.append(uniValueSeparator.join(unicodeValueElements))
@@ -225,11 +226,14 @@ class ShowCharacterInfoBox(TextBox):
         del kwargs['window']
         super(ShowCharacterInfoBox, self).__init__(*args, **kwargs)
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
-    
+
     def currentGlyphChanged(self, info):
         try:
+            nsText = self.getNSTextField()
+            color = getDefaultColor("glyphViewPointCoordinateColor")
+            nsText.setTextColor_(color)
             self.set(getGlyphInfo(self.window.getGlyph()))
-        except:
+        except Exception:
             pass
 
     def _breakCycles(self):
@@ -253,10 +257,11 @@ class ShowCharacterInfo(BaseWindowController):
         frame = superview.frame()
         vanillaView._setFrame(frame)
         superview.addSubview_(view)
-                
+
     def windowCloseCallback(self, sender):
         super(ShowCharacterInfoBox, self).windowCloseCallback(sender)
         removeObserver(self, "glyphWindowDidOpen")
 
-ShowCharacterInfo()
-#print getGlyphInfo(CurrentGlyph())
+
+if __name__ == '__main__':
+    ShowCharacterInfo()
