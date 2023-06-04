@@ -3,17 +3,21 @@ SHOW CHARACTER INFO
 
 """
 
-from vanilla import TextBox
-from defconAppKit.windows.baseWindow import BaseWindowController
-from mojo.events import addObserver, removeObserver
+import os
+import json
 import unicodedata
+from defconAppKit.windows.baseWindow import BaseWindowController
+from vanilla import TextBox
 try:
     from lib.tools.agl import AGL2UV
 except ImportError:
     from fontTools.agl import AGL2UV
-import json
-import os
 from lib.tools.defaults import getDefaultColor
+from mojo.events import addObserver, removeObserver
+from mojo.roboFont import version
+if version >= "4.4b":  # Support for dark mode color retrieval
+    from mojo.UI import appearanceColorKey
+
 
 nameMap = {
     'ALT': 'Alternate',
@@ -142,7 +146,7 @@ def getGlyphInfo(g):
     suffixElements = suffix.split('_')
     if suffixElements == ['']:
         suffixElements = []
-    f = g.getParent()
+    f = g.font
     unicodeNameElements = []
     unicodeValueElements = []
     charString = u''
@@ -221,20 +225,33 @@ class ShowCharacterInfoBox(TextBox):
     The subclassed vanilla text box.
     """
     def __init__(self, *args, **kwargs):
-
         self.window = kwargs['window']
+        self.glyph  = self.window.getGlyph()
+        self.font   = RFont(self.glyph.font)
+        if version >= "4.4b":  # Support for dark mode color retrieval
+            self.color = getDefaultColor(appearanceColorKey("glyphViewMetricsTitlesColor"))
+        else:
+            self.color = getDefaultColor("glyphViewMetricsTitlesColor")
         del kwargs['window']
         super(ShowCharacterInfoBox, self).__init__(*args, **kwargs)
+        nsText = self.getNSTextField()
+        nsText.setTextColor_(self.color)
+        self.showInfo(self.glyph)
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
-
+        
     def currentGlyphChanged(self, info):
-        try:
-            nsText = self.getNSTextField()
-            color = getDefaultColor("glyphViewPointCoordinateColor")
-            nsText.setTextColor_(color)
-            self.set(getGlyphInfo(self.window.getGlyph()))
-        except Exception:
-            pass
+        self.glyph = info['glyph']
+        self.showInfo(self.glyph)
+
+    def showInfo(self, glyph):
+        if self.glyph == None:
+             return
+        # Only change the glyph info in the glyph editor if the info belongs to that glyph
+        if self.glyph.font == self.font:
+            try:
+                self.set(getGlyphInfo(self.glyph))
+            except Exception:
+                pass
 
     def _breakCycles(self):
         super(ShowCharacterInfoBox, self)._breakCycles()
@@ -249,10 +266,10 @@ class ShowCharacterInfo(BaseWindowController):
         self.window = None
 
     def glyphWindowDidOpen(self, info):
-        window = info["window"]
-        self.window = window
-        vanillaView = ShowCharacterInfoBox((20, -30, -20, 22), getGlyphInfo(self.window.getGlyph()), window=self.window, alignment="right", sizeStyle="mini")
-        superview = window.editGlyphView.enclosingScrollView().superview()
+        self.window = info["window"]
+        glyph  = info["glyph"]
+        vanillaView = ShowCharacterInfoBox((20, -30, -20, 22), getGlyphInfo(glyph), window=self.window, alignment="right", sizeStyle="mini")
+        superview = self.window.editGlyphView.enclosingScrollView().superview()
         view = vanillaView.getNSTextField()
         frame = superview.frame()
         vanillaView._setFrame(frame)
