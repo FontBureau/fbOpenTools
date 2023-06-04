@@ -142,7 +142,7 @@ def getGlyphInfo(g):
     suffixElements = suffix.split('_')
     if suffixElements == ['']:
         suffixElements = []
-    f = g.getParent()
+    f = g.font
     unicodeNameElements = []
     unicodeValueElements = []
     charString = u''
@@ -221,18 +221,23 @@ class ShowCharacterInfoBox(TextBox):
     The subclassed vanilla text box.
     """
     def __init__(self, *args, **kwargs):
-
         self.window = kwargs['window']
+        self.glyph = self.window.getGlyph()
+        self.color = getDefaultColor("glyphViewMetricsTitlesColor")
         del kwargs['window']
         super(ShowCharacterInfoBox, self).__init__(*args, **kwargs)
+        nsText = self.getNSTextField()
+        nsText.setTextColor_(self.color)
+        self.showInfo(self.glyph)
         addObserver(self, "currentGlyphChanged", "currentGlyphChanged")
-
+        
     def currentGlyphChanged(self, info):
+        self.glyph = info['glyph']
+        self.showInfo(self.glyph)
+
+    def showInfo(self, glyph):
         try:
-            nsText = self.getNSTextField()
-            color = getDefaultColor("glyphViewPointCoordinateColor")
-            nsText.setTextColor_(color)
-            self.set(getGlyphInfo(self.window.getGlyph()))
+            self.set(getGlyphInfo(self.glyph))
         except Exception:
             pass
 
@@ -249,10 +254,10 @@ class ShowCharacterInfo(BaseWindowController):
         self.window = None
 
     def glyphWindowDidOpen(self, info):
-        window = info["window"]
-        self.window = window
-        vanillaView = ShowCharacterInfoBox((20, -30, -20, 22), getGlyphInfo(self.window.getGlyph()), window=self.window, alignment="right", sizeStyle="mini")
-        superview = window.editGlyphView.enclosingScrollView().superview()
+        self.window = info["window"]
+        glyph  = info["glyph"]
+        vanillaView = ShowCharacterInfoBox((20, -30, -20, 22), getGlyphInfo(glyph), window=self.window, alignment="right", sizeStyle="mini")
+        superview = self.window.editGlyphView.enclosingScrollView().superview()
         view = vanillaView.getNSTextField()
         frame = superview.frame()
         vanillaView._setFrame(frame)

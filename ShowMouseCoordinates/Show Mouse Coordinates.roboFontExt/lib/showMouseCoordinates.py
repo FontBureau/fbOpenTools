@@ -23,6 +23,7 @@ Released under MIT license.
 from vanilla import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.events import addObserver, removeObserver
+from lib.tools.defaults import getDefaultColor
 import math
 
 class ShowMouseCoordinatesTextBox(TextBox):
@@ -70,7 +71,9 @@ class ShowMouseCoordinates(BaseWindowController):
         window = info["window"]
         vanillaView = ShowMouseCoordinatesTextBox((20, -30, -20, 22), "", alignment="left", sizeStyle="mini")
         superview = window.editGlyphView.enclosingScrollView().superview()
+        color = getDefaultColor("glyphViewMetricsTitlesColor")
         view = vanillaView.getNSTextField()
+        view.setTextColor_(color)
         frame = superview.frame()
         vanillaView._setFrame(frame)
         superview.addSubview_(view)
