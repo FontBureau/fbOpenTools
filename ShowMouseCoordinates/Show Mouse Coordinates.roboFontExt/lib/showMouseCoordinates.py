@@ -20,13 +20,14 @@ Released under MIT license.
 
 """
 
+import math
 from vanilla import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.events import addObserver, removeObserver
 from mojo.roboFont import version
 from lib.tools.defaults import getDefaultColor
-from mojo.UI import appearanceColorKey
-import math
+if version >= "4.4b":  # Support for dark mode color retrieval
+    from mojo.UI import appearanceColorKey
 
 
 class ShowMouseCoordinatesTextBox(TextBox):

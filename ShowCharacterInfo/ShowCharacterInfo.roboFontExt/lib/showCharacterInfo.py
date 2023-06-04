@@ -3,19 +3,20 @@ SHOW CHARACTER INFO
 
 """
 
-from vanilla import TextBox
-from defconAppKit.windows.baseWindow import BaseWindowController
-from lib.tools.defaults import getDefaultColor
-from mojo.events import addObserver, removeObserver
-from mojo.UI import getDefault, appearanceColorKey
-from mojo.roboFont import version
+import os
+import json
 import unicodedata
+from defconAppKit.windows.baseWindow import BaseWindowController
+from vanilla import TextBox
 try:
     from lib.tools.agl import AGL2UV
 except ImportError:
     from fontTools.agl import AGL2UV
-import json
-import os
+from lib.tools.defaults import getDefaultColor
+from mojo.events import addObserver, removeObserver
+from mojo.roboFont import version
+if version >= "4.4b":  # Support for dark mode color retrieval
+    from mojo.UI import appearanceColorKey
 
 
 nameMap = {
