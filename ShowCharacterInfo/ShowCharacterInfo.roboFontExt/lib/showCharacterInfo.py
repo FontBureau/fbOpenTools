@@ -222,8 +222,9 @@ class ShowCharacterInfoBox(TextBox):
     """
     def __init__(self, *args, **kwargs):
         self.window = kwargs['window']
-        self.glyph = self.window.getGlyph()
-        self.color = getDefaultColor("glyphViewMetricsTitlesColor")
+        self.glyph  = self.window.getGlyph()
+        self.font   = RFont(self.glyph.font)
+        self.color  = getDefaultColor("glyphViewMetricsTitlesColor")
         del kwargs['window']
         super(ShowCharacterInfoBox, self).__init__(*args, **kwargs)
         nsText = self.getNSTextField()
@@ -236,10 +237,14 @@ class ShowCharacterInfoBox(TextBox):
         self.showInfo(self.glyph)
 
     def showInfo(self, glyph):
-        try:
-            self.set(getGlyphInfo(self.glyph))
-        except Exception:
-            pass
+        if self.glyph == None:
+             return
+        # Only change the glyph info in the glyph editor if the info belongs to that glyph
+        if self.glyph.font == self.font:
+            try:
+                self.set(getGlyphInfo(self.glyph))
+            except Exception:
+                pass
 
     def _breakCycles(self):
         super(ShowCharacterInfoBox, self)._breakCycles()
