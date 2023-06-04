@@ -23,8 +23,11 @@ Released under MIT license.
 from vanilla import *
 from defconAppKit.windows.baseWindow import BaseWindowController
 from mojo.events import addObserver, removeObserver
+from mojo.roboFont import version
 from lib.tools.defaults import getDefaultColor
+from mojo.UI import appearanceColorKey
 import math
+
 
 class ShowMouseCoordinatesTextBox(TextBox):
     """
@@ -71,7 +74,10 @@ class ShowMouseCoordinates(BaseWindowController):
         window = info["window"]
         vanillaView = ShowMouseCoordinatesTextBox((20, -30, -20, 22), "", alignment="left", sizeStyle="mini")
         superview = window.editGlyphView.enclosingScrollView().superview()
-        color = getDefaultColor("glyphViewMetricsTitlesColor")
+        if version >= "4.4b":  # Support for dark mode color retrieval
+            color = getDefaultColor(appearanceColorKey("glyphViewMetricsTitlesColor"))
+        else:
+            color = getDefaultColor("glyphViewMetricsTitlesColor")
         view = vanillaView.getNSTextField()
         view.setTextColor_(color)
         frame = superview.frame()

@@ -5,7 +5,10 @@ SHOW CHARACTER INFO
 
 from vanilla import TextBox
 from defconAppKit.windows.baseWindow import BaseWindowController
+from lib.tools.defaults import getDefaultColor
 from mojo.events import addObserver, removeObserver
+from mojo.UI import getDefault, appearanceColorKey
+from mojo.roboFont import version
 import unicodedata
 try:
     from lib.tools.agl import AGL2UV
@@ -13,7 +16,7 @@ except ImportError:
     from fontTools.agl import AGL2UV
 import json
 import os
-from lib.tools.defaults import getDefaultColor
+
 
 nameMap = {
     'ALT': 'Alternate',
@@ -224,7 +227,10 @@ class ShowCharacterInfoBox(TextBox):
         self.window = kwargs['window']
         self.glyph  = self.window.getGlyph()
         self.font   = RFont(self.glyph.font)
-        self.color  = getDefaultColor("glyphViewMetricsTitlesColor")
+        if version >= "4.4b":  # Support for dark mode color retrieval
+            self.color = getDefaultColor(appearanceColorKey("glyphViewMetricsTitlesColor"))
+        else:
+            self.color = getDefaultColor("glyphViewMetricsTitlesColor")
         del kwargs['window']
         super(ShowCharacterInfoBox, self).__init__(*args, **kwargs)
         nsText = self.getNSTextField()
