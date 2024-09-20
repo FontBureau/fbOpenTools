@@ -65,8 +65,8 @@ def makeReferenceLayer(source, italicAngle, backgroundName='com.fontbureau.itali
     g.decompose()
     source.copyToLayer(backgroundName)
     # use for vertical offset later
-    top1 = g.box[3]
-    bottom1 = g.box[1]
+    top1 = g.bounds[3]
+    bottom1 = g.bounds[1]
     height1 = top1 + abs(bottom1)
     # vertical skew
     m = Identity
@@ -75,13 +75,13 @@ def makeReferenceLayer(source, italicAngle, backgroundName='com.fontbureau.itali
     x = math.radians(dx)
     y = math.radians(dy)
     m = m.skew(x, -y)
-    g.transform(m)
-    top2 = g.box[3]
-    bottom2 = g.box[1]
+    g.transformBy(m)
+    top2 = g.bounds[3]
+    bottom2 = g.bounds[1]
     height2 = top2 + abs(bottom2)
     dif = (height1-height2) / 2
     yoffset = (abs(bottom2)-abs(bottom1)) + dif
-    g.move((0, yoffset))
+    g.moveBy((0, yoffset))
 
 def italicize(glyph,
               italicAngle=None,
@@ -99,30 +99,30 @@ def italicize(glyph,
     with glyph.undo("italicBowtie"):
         xoffset = offset
         # skew the glyph horizontally
-        glyph.skew(-italicAngle, (0, 0))
+        glyph.skewBy(-italicAngle, (0, 0))
         if doContours:
             for c in glyph.contours:
-                c.move((xoffset, 0))
+                c.moveBy((xoffset, 0))
                 if DEBUG:
                     print(f'\t\t\t {c}')
         # anchors
         if doAnchors:
             for anchor in glyph.anchors:
-                anchor.move((xoffset, 0))
+                anchor.moveBy((xoffset, 0))
                 if DEBUG:
                     print(f'\t\t\t {anchor}')
         # guides
         if doGuides:
-            for guide in glyph.guides:
+            for guide in glyph.guidelines:
                 guide.x += xoffset
                 if DEBUG:
                     print(f'\t\t\t {guide} {guide.x}')
-                # image
-                if doImage:
-                    if glyph.image:
-                        glyph.image.move((xoffset, 0))
-                        if DEBUG:
-                            print(f'\t\t\t {glyph.image}')
+        # image
+        if doImage:
+            if glyph.image:
+                glyph.image.moveBy((xoffset, 0))
+                if DEBUG:
+                    print(f'\t\t\t {glyph.image}')
         if doComponents:
             for c in glyph.components:
                 cxoffset = calcItalicOffset(c.offset[1], italicAngle)
@@ -173,18 +173,27 @@ class ItalicBowtie(Subscriber, WindowController):
     def setState(self):
         currentWindow = CurrentWindow()
         if currentWindow:
-            if hasattr(currentWindow, 'getGlyph'):
-                self.currentGlyph = currentWindow.getGlyph()
-                self.currentFont = self.currentGlyph.font
-            elif hasattr(currentWindow, 'document'):
+            if hasattr(currentWindow, 'document'):
                 self.currentGlyph = currentWindow.document.getCurrentGlyph()
                 self.currentFont = currentWindow.document.getFont()
+            elif hasattr(currentWindow, 'getGlyph'):
+                self.currentGlyph = currentWindow.getGlyph()
+                self.currentFont = self.currentGlyph.font
             else:
                 self.currentGlyph = CurrentGlyph()
                 self.currentFont = CurrentFont()
         else:
             self.currentGlyph = None
             self.currentFont = None
+            
+        if self.currentGlyph:
+            self.currentGlyph = self.currentGlyph.asFontParts()
+        
+        if self.currentFont:
+            self.currentFont = self.currentFont.asFontParts()
+            self.w.setTitle(f"Italic Bowtie — {self.currentFont.fontWindow().window().getTitle()}")
+        else:
+            self.w.setTitle("Italic Bowtie")
             
     def setUpContainers(self):
         glyphEditor = CurrentGlyphWindow()
@@ -268,28 +277,27 @@ class ItalicBowtie(Subscriber, WindowController):
         self.setState()
         italicAngle = self.getItalicAngle()
         italicSlantOffset = self.getItalicSlantOffset()
+        
+        fonts = []
+        
         if self.w.fontSelection.get() == 0:
             if self.currentFont is not None:
-                fonts = [self.currentFont]
-            else:
-                fonts = []
+                fonts.append(self.currentFont)
         else:
             fonts = AllFonts()
 
+        glyphs = []
         if self.w.glyphSelection.get() == 0 and self.currentGlyph is not None:
-            glyphs = [self.currentGlyph]
+            glyphs.append(self.currentGlyph)
         elif self.w.glyphSelection.get() == 1:
-            glyphs = []
             for f in fonts:
-                for gname in self.currentFont.selection:
+                for gname in self.currentFont.selectedGlyphNames:
                     if gname in f:
                         glyphs.append(f[gname])
-        else:
-            glyphs = []
+        elif self.w.glyphSelection.get() == 2:
             for f in fonts:
                 for g in f:
-                    glyphs.append(g.name)
-
+                    glyphs.append(g)
         for glyph in glyphs:
             italicize(glyph, italicAngle,
                       offset=italicSlantOffset,
