@@ -118,8 +118,8 @@ def getCharName(char, dec=None, BIGUNI=BIGUNI):
         return unicodedata.name(char)
     except Exception:
         if not BIGUNI:
-            bigUniFile = open(os.path.join(os.path.split(__file__)[0], 'bigUni.json'))
-            BIGUNI = json.loads(bigUniFile.read())
+            with open(os.path.join(os.path.split(__file__)[0], 'bigUni.json')) as bigUniFile:
+                BIGUNI = json.loads(bigUniFile.read())
         return BIGUNI.get(str(dec))
 
 def getChar(dec):
